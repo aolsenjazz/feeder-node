@@ -6,7 +6,7 @@ import Worker from './feeder-node.worker.js';
  * and AudioWorkletBackend, passes data directly from worker thread to audio thread via MessagePort
  */
 export default class WorkerResampler extends AbstractProcessor {
-	constructor(inputSampleRate, outputSampleRate, nChannels, onProcessedCallback, port, pathToWorker) {
+	constructor(inputSampleRate, outputSampleRate, nChannels, onProcessedCallback, port, pathToWorker, converterType) {
 		super(inputSampleRate, outputSampleRate, onProcessedCallback);
 
 		this.worker = new Worker();
@@ -16,7 +16,8 @@ export default class WorkerResampler extends AbstractProcessor {
 			command: 'init', 
 			inputSampleRate: inputSampleRate, 
 			outputSampleRate: outputSampleRate, 
-			nChannels: nChannels
+			nChannels: nChannels,
+			converterType: converterType
 		});
 
 		if (port !== undefined) this.worker.postMessage({command: 'connect'}, [port]);

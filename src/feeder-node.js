@@ -5,6 +5,7 @@ import MainThreadResampler from './main-thread-resampler';
 import WorkerResampler from './worker-resampler';
 
 import { BackendState } from './abstract-backend';
+import { ConverterType } from '@alexanderolsen/libsamplerate-js'
 
 import { toFloat32, checkFileExists } from './util';
 
@@ -12,13 +13,15 @@ export default class FeederNode {
 	constructor(context, options={}) {
 		this.context = context;
 
-		let resampleAsync          = options.resampleAsync === undefined ? true : options.resampleAsync;
-		let batchSize              = options.batchSize || (window.AudioWorklet !== undefined ? 128 : 512);
-		let bufferThreshold        = options.bufferThreshold || 4096;
-		let nChannels              = options.nChannels || 2;
-		let bufferLength           = options.bufferLength || 192000;
-		let pathToWorkletProcessor = options.pathToWorkletProcessor || '/feeder-node.processor.js';
-		let pathToWorker           = options.pathToWorker || '/feeder-node.worker.js';
+		let resampleAsync       = options.resampleAsync === undefined ? true : options.resampleAsync;
+		let batchSize           = options.batchSize || (window.AudioWorklet !== undefined ? 128 : 512);
+		let bufferThreshold     = options.bufferThreshold || 4096;
+		let nChannels           = options.nChannels || 2;
+		let bufferLength        = options.bufferLength || 192000;
+		let resampConverterType = options.resampConverterType || ConverterType.SRC_SINC_FASTEST;
+		
+		let pathToWorkletProcessor = '/feeder-node.processor.js';
+		let pathToWorker = '/feeder-node.worker.js';
 
 		this.inputSampleRate = options.inputSampleRate || context.sampleRate;
 		this.outputSampleRate = context.sampleRate;
@@ -43,7 +46,7 @@ export default class FeederNode {
 			nChannels,
 			this._onResampleComplete.bind(this),
 			this.messageChannel.port1, // ignored by MainThreadResampler
-			pathToWorker // ignored by MainThreadResampler
+			resampConverterType // ignored by MainThreadResampler
 		);
 
 		// init backend

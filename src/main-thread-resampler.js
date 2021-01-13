@@ -1,5 +1,5 @@
 import AbstractProcessor from './abstract-processor';
-import Resampler from './resampler'
+import LinearResampler from './resampler'
 import { copyInterleavedToChannels, writeChannelsToInterleaved } from './util';
 
 const BYTES_PER_FLOAT32 = 4;
@@ -17,7 +17,7 @@ export default class MainThreadResampler extends AbstractProcessor {
 		// channels need to be de-interleaved before processing. store de-interleaved data in this resusable buffer
 		this.inputChannelBuffers = Array.apply(null, Array(nChannels)).map((x, i) => { return new Float32Array(192000) });
 
-		this._resampler = new Resampler(inputSampleRate, outputSampleRate, nChannels);
+		this._resampler = new LinearResampler(inputSampleRate, outputSampleRate, nChannels);
 	}
 
 	/**

@@ -1,8 +1,11 @@
-/** 
- * Entire class yoinked from https://github.com/brion/audio-feeder
- * At some point, a more sophisticated solution should be used
+/**
+ * Performs upsampling via linear interpolation, and downsampling by simply remove extra
+ * samples. In most cases, this class should never be used because uses is a fairly naive
+ * resampling algorithm. Prefer @alexanderolsen/libresample-js
+ *
+ * This class is included because it is fast enough to be used on the main thread. 
  */
-export default class Resampler {
+export default class LinearResampler {
 	constructor(inputSampleRate, outputSampleRate, nChannels) {
 		this.inputSampleRate = inputSampleRate;
 		this.outputSampleRate = outputSampleRate;
@@ -15,8 +18,6 @@ export default class Resampler {
 	/**
 	@param {SampleBuffer} a list of Float32Arrays, one array per channel
 	Taken from https://github.com/brion/audio-feeder/blob/master/src/index.js
-
-	TODO: A much better resampling algo should definitely be used.
 	*/
 	resample(sampleData) {
 		var rate = this.inputSampleRate,
