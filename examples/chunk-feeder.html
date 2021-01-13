@@ -1,0 +1,70 @@
+<html>
+	<input type="file" accept="audio" id="input"/>
+	<button id="play">Feed 1 second of audio</button>
+
+	<script src="https://cdn.jsdelivr.net/npm/wavefile"></script>
+	<script src="../dist/feeder-node.js"></script>
+	<script>
+		var input = document.getElementById('input');
+		var play = document.getElementById('play');
+		let samples, feederNode, nChannels, sampleRate;
+		let initialized = false;
+
+		// load a .wav file
+		var reader = new FileReader();
+		reader.onload = function(e) {
+			let safariFixed = e.target.result.split('base64,')[1];
+
+			var wav = new wavefile.WaveFile();
+
+			wav.fromBase64(safariFixed);
+
+			nChannels = wav.fmt.numChannels;
+			sampleRate = wav.fmt.sampleRate;
+			samples = wav.getSamples(true, Int16Array);
+		}
+		input.onchange = (e) => {
+			reader.readAsDataURL(e.target.files[0]);
+		}
+
+		let offset = 0;
+		play.onclick = () => {
+			if (!initialized) init();
+			initialized = true;
+
+			let chunkSize = nChannels === 1 ? 44100 : 88200;
+			let dataAvailable = samples.length - offset / 2;
+
+			chunkSize = Math.min(chunkSize, dataAvailable);
+
+			if (chunkSize <= 0) return;
+
+			let data = new Int16Array(samples.buffer, offset, chunkSize);
+			
+			feederNode.feed(data);
+
+			offset += chunkSize * 2; // underlying buffer in WaveFile is float64
+		}
+
+		function init() {
+			let AudioCtx = window.AudioContext || window.webkitAudioContext;
+			let context = new AudioCtx({sampleRate: 44100});
+			feederNode = new FeederNode(context, {
+				pathToWorkletProcessor: '/dist/feeder-node.processor.js', 
+				pathToWorker: '/dist/feeder-node.worker.js', 
+				nChannels: nChannels,
+				inputSampleRate: sampleRate,
+				outputSampleRate: context.sampleRate,
+			});
+			feederNode.connect(context.destination);
+		}
+
+		// every second, feed 1 second (or remaining amount) of audio data
+		function startAudioInterval(samples) {
+			
+			setInterval(() => {
+				
+			}, 1000);
+		}
+	</script>
+</html>
