@@ -86,25 +86,29 @@ When creating a FeederNode instance, you have number of options available:
 ```javascript
 let context   = new AudioContext();
 let nChannels = 2;
+
+// entries are defaults
 let options = {
-	batchSize:           // { Number } default 512 || 128. Stuck at 128 for `AudioWorklet`s
-	bufferThreshold:     // { Number } default 4096. Number of samples to buffer before propagating to dstination
-	bufferLength:        // { Number } default 192000. Length of RingBuffer. See ring-buffer.js for more
-	resampConverterType: // { Number } default 2. See **resampConverterType**
-	inputSampleRate:     // { Number } default context.sampleRate
-	pathToWorklet:       // { String } default '/feeder-node.processor.js'. See README for more
-	pathToWorker:        // { String } default '/feeder-node.worker.js'. See README for more
-	pathToWasm:          // { String } default '/feeder-node.wasm.js'. See README for more
+	inputSampleRate:     context.sampleRate, // Nothing surprising here
+
+	batchSize:           (512 || 128), // Stuck at 128 for `AudioWorklet`s. 
+	bufferThreshold:     4096,         // Number of samples to buffer before propagating to dstination
+	bufferLength:        192000,       // Length of RingBuffer. See ring-buffer.js for more
+	resampConverterType: 2,            // See **resampConverterType**
+
+	pathToWorklet:       '/feeder-node.processor.js', // Set to location of your feeder-node.processor.js
+	pathToWorker:        '/feeder-node.worker.js',    // Set to location of your feeder-node.worker.js
+	pathToWasm:          '/libsamplrate.wasm.js'      // set to location of your libsamplerate.wasm
 }
 
 createFeederNode(context, nChannels, options).then((feederNode) => { ... });
 ```
 
 #### `batchSize`
-Modifies the batch size processed by `ScriptProcessorNode`. This does not affect `AudioWorklet`s as they're stuck at 128.
+Modifies the batch size processed by `ScriptProcessorNode`. This does not affect `AudioWorklet`s as they're stuck at 128. If using ScriptProcessorNode, must be one of the following: `[256, 512, 1024, 2048, 4096, 8192, 16384]`.
 
 #### `bufferThreshold`
-FeederNode buffers this many samples (per channel) before propagating to the next `AudioNode` in the graph. Higher values (16000-32000) can be useful to guarantee seamless audio if playing back in real-time, though lower values result in lower latency.
+FeederNode buffers this many samples (per channel) before propagating to the next `AudioNode` in the graph. Higher values (16000-32000) can be useful to guarantee seamless audio if playing back in real-time, though lower values result in lower latency. If FeederNode runs out of data, buffer this many sample again before propagating.
 
 #### `bufferLength`
 The total amount of data which can be buffered at a time. If you try to buffer more data than this, you'll end up overwriting older data.
