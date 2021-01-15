@@ -1,7 +1,6 @@
 import 'web-audio-test-api';
 import 'babel-polyfill';
 import { BackendState } from '../src/abstract-backend';
-const waitForExpect = require('wait-for-expect');
 
 class MockAudioWorkletProcessor {
 
@@ -17,7 +16,7 @@ global.AudioWorkletProcessor = MockAudioWorkletProcessor;
 global.registerProcessor = () => {}
 
 test('init passes values correctly', () => {
-	const WorkletProcessor = require('../src/feeder-node.processor.js');
+	const WorkletProcessor = require('../src/feeder-node.worklet.js');
 
 	let wp = new WorkletProcessor.default();
 
@@ -34,7 +33,7 @@ test('init passes values correctly', () => {
 });
 
 test('passing incorrect command throws', () => {
-	const WorkletProcessor = require('../src/feeder-node.processor.js');
+	const WorkletProcessor = require('../src/feeder-node.worklet.js');
 
 	let wp = new WorkletProcessor.default();
 
@@ -48,7 +47,7 @@ test('passing incorrect command throws', () => {
 });
 
 test('feed() feeds data correctly', () => {
-	const WorkletProcessor = require('../src/feeder-node.processor.js');
+	const WorkletProcessor = require('../src/feeder-node.worklet.js');
 
 	let wp = new WorkletProcessor.default();
 
@@ -71,7 +70,7 @@ test('feed() feeds data correctly', () => {
 });
 
 test('process with empty buffer fills with silence', () => {
-	const WorkletProcessor = require('../src/feeder-node.processor.js');
+	const WorkletProcessor = require('../src/feeder-node.worklet.js');
 
 	let wp = new WorkletProcessor.default();
 
@@ -97,7 +96,7 @@ test('process with empty buffer fills with silence', () => {
 });
 
 test('process fills buffer when in PLAYING state', () => {
-	const WorkletProcessor = require('../src/feeder-node.processor.js');
+	const WorkletProcessor = require('../src/feeder-node.worklet.js');
 
 	let wp = new WorkletProcessor.default();
 
@@ -129,7 +128,7 @@ test('process fills buffer when in PLAYING state', () => {
 });
 
 test('buffer resizing correctly notifies main thread', () => {
-	const WorkletProcessor = require('../src/feeder-node.processor.js');
+	const WorkletProcessor = require('../src/feeder-node.worklet.js');
 
 	let wp = new WorkletProcessor.default();
 
@@ -148,7 +147,7 @@ test('buffer resizing correctly notifies main thread', () => {
 });
 
 test('calling process() before init just returns true', () => {
-	const WorkletProcessor = require('../src/feeder-node.processor.js');
+	const WorkletProcessor = require('../src/feeder-node.worklet.js');
 
 	let wp = new WorkletProcessor.default();
 
@@ -156,7 +155,7 @@ test('calling process() before init just returns true', () => {
 });
 
 test('sending connect command binds _onMessage to ports[0].onmessage', () => {
-	const WorkletProcessor = require('../src/feeder-node.processor.js');
+	const WorkletProcessor = require('../src/feeder-node.worklet.js');
 
 	let wp = new WorkletProcessor.default();
 
@@ -174,7 +173,7 @@ test('sending connect command binds _onMessage to ports[0].onmessage', () => {
 });
 
 test('updating state to UNINITIALIZED returns without notifying', () => {
-	const WorkletProcessor = require('../src/feeder-node.processor.js');
+	const WorkletProcessor = require('../src/feeder-node.worklet.js');
 
 	let wp = new WorkletProcessor.default();
 
@@ -187,7 +186,7 @@ test('updating state to UNINITIALIZED returns without notifying', () => {
 });
 
 test('running out of samples causes backend to move to starved state', () => {
-	const WorkletProcessor = require('../src/feeder-node.processor.js');
+	const WorkletProcessor = require('../src/feeder-node.worklet.js');
 
 	let wp = new WorkletProcessor.default();
 
@@ -205,7 +204,7 @@ test('running out of samples causes backend to move to starved state', () => {
 });
 
 test('have > bufferThreshold samples moves READY state to PLAYING', () => {
-	const WorkletProcessor = require('../src/feeder-node.processor.js');
+	const WorkletProcessor = require('../src/feeder-node.worklet.js');
 
 	let wp = new WorkletProcessor.default();
 
@@ -223,7 +222,7 @@ test('have > bufferThreshold samples moves READY state to PLAYING', () => {
 });
 
 test('have > bufferThreshold samples moves STARVED state to PLAYING', () => {
-	const WorkletProcessor = require('../src/feeder-node.processor.js');
+	const WorkletProcessor = require('../src/feeder-node.worklet.js');
 
 	let wp = new WorkletProcessor.default();
 
@@ -241,7 +240,7 @@ test('have > bufferThreshold samples moves STARVED state to PLAYING', () => {
 });
 
 test('calling _updateState with undefined state causes switch default, doesnt notify', () => {
-	const WorkletProcessor = require('../src/feeder-node.processor.js');
+	const WorkletProcessor = require('../src/feeder-node.worklet.js');
 
 	let wp = new WorkletProcessor.default();
 	let notified = false;
@@ -260,7 +259,7 @@ test('calling _updateState with undefined state causes switch default, doesnt no
 });
 
 test('calling _updateState with PLAYING state and enough samples doesnt change state', () => {
-	const WorkletProcessor = require('../src/feeder-node.processor.js');
+	const WorkletProcessor = require('../src/feeder-node.worklet.js');
 
 	let wp = new WorkletProcessor.default();
 	let notified = false;
@@ -279,7 +278,7 @@ test('calling _updateState with PLAYING state and enough samples doesnt change s
 });
 
 test('calling _notifyStateChange calls callback', () => {
-	const WorkletProcessor = require('../src/feeder-node.processor.js');
+	const WorkletProcessor = require('../src/feeder-node.worklet.js');
 
 	let wp = new WorkletProcessor.default();
 	let notified = false;

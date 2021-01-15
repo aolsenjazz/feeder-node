@@ -1,72 +1,28 @@
-import ScriptProcessorBackend from './script-processor-backend';
-import AudioWorkletBackend from './audio-worklet-backend';
-
-import MainThreadResampler from './main-thread-resampler';
-import WorkerResampler from './worker-resampler';
-
 import { BackendState } from './abstract-backend';
-import { ConverterType } from '@alexanderolsen/libsamplerate-js'
-
-import { toFloat32, checkFileExists } from './util';
+import { toFloat32 } from './util';
 
 export default class FeederNode {
-	constructor(context, options={}) {
-		this.context = context;
 
-		let resampleAsync       = options.resampleAsync === undefined ? true : options.resampleAsync;
-		let batchSize           = options.batchSize || (window.AudioWorklet !== undefined ? 128 : 512);
-		let bufferThreshold     = options.bufferThreshold || 4096;
-		let nChannels           = options.nChannels || 2;
-		let bufferLength        = options.bufferLength || 192000;
-		let resampConverterType = options.resampConverterType || ConverterType.SRC_SINC_FASTEST;
-		
-		let pathToWorkletProcessor = '/feeder-node.processor.js';
-		let pathToWorker = '/feeder-node.worker.js';
-
-		this.inputSampleRate = options.inputSampleRate || context.sampleRate;
-		this.outputSampleRate = context.sampleRate;
-
+	/**
+	 * Constructor
+	 * 
+	 * @param { AbstractProcessor } resampler Resamples data before handing to the backend for propagation
+	 * @param { AbstractBackend }   backend   Propagates audio data to the next AudioNode in the graph
+	 */
+	constructor(resampler, backend) {
 		// init MessageChannel if using both async resampler and backend
-		this.messageChannel = {port1: undefined, port2: undefined};
-		if (resampleAsync && window.AudioWorklet !== undefined) {
-			this.messageChannel = new MessageChannel();
+		if (resampler.constructor.name === 'WorkerResampler' && backend.constructor.name === 'AudioWorkletBackend') {
+			let channel = new MessageChannel();
+			resampler.setPort(channel.port1);
+			backend  .setPort(channel.port2);
 		}
 
-		// init resampler
-		let Resampler;
-		if (resampleAsync) {
-			checkFileExists(pathToWorker);
-			Resampler = WorkerResampler;
-		} else {
-			Resampler = MainThreadResampler;
-		}
-		this._resampler = new Resampler(
-			this.inputSampleRate, 
-			this.outputSampleRate,
-			nChannels,
-			this._onResampleComplete.bind(this),
-			this.messageChannel.port1, // ignored by MainThreadResampler
-			resampConverterType // ignored by MainThreadResampler
-		);
+		// set callbacks
+		resampler.onProcessed = this._onResampleComplete.bind(this);
+		backend.onStateChange = this._onBackendStateChange.bind(this);
 
-		// init backend
-		let Backend;
-		if (window.AudioWorklet !== undefined) {
-			checkFileExists(pathToWorkletProcessor);
-			Backend = AudioWorkletBackend;
-		} else {
-			Backend = ScriptProcessorBackend;
-		}
-		this._backend = new Backend(
-			context, 
-			batchSize, 
-			nChannels, 
-			bufferLength, 
-			bufferThreshold,
-			this._onBackendStateChange.bind(this),
-			this.messageChannel.port2, // ignored by ScriptProcessorBackend
-			pathToWorkletProcessor // ignored by ScriptProcessorBackend
-		);
+		this._resampler = resampler;
+		this._backend = backend;
 	}
 
 	/** getters */
@@ -75,12 +31,12 @@ export default class FeederNode {
 	get batchSize() { return this._backend.batchSize; }
 
 	/**
-	 * Connects FeederNode to the specific output AudioNode
+	 * Connects FeederNode to the specific destination AudioNode
 	 *
-	 * @param {AudioNode} output The node to connect to
+	 * @param {AudioNode} destination The node to connect to
 	 */
-	connect(output) {
-		this._backend.connect(output);
+	connect(destination) {
+		this._backend.connect(destination);
 	}
 
 	/** Disconnects from the currently-connected AudioNode */
@@ -92,7 +48,7 @@ export default class FeederNode {
 	 * Feeds raw PCM audio data to the underlying node. Any kind of TypedArray can be submitted - FeederNode
 	 * will automatically convert to Float32 and scale to -1 < n < 1.
 	 *
-	 * @param {ArrayBuffer} TypedArray or ArrayBuffer representing typed array. Can be any TypedArray
+	 * @param {TypedArray} data Any TypedArray. Conversion will be done automatically
 	 */
 	feed(data) {
 		let parsedData;
@@ -100,7 +56,7 @@ export default class FeederNode {
 		if (ArrayBuffer.isView(data)) {
 			parsedData = toFloat32(data);
 		} else {
-			throw Error(`FeederNode.feed() must receive an instance of TypedArray. You passed ${data.constructor}`);
+			throw Error(`FeederNode.feed() must receive an instance of TypedArray. You passed ${data.constructor.name}`);
 		}
 
 		this._resampler.processBatch(parsedData);
@@ -112,10 +68,10 @@ export default class FeederNode {
 	onBackendStarved() {}
 
 	/**
-	 * Called by this._resampler if this.messageChannel isn't in use to transfer data from the
-	 * resampler to the backend
+	 * Called by this._resampler if a MessageChannel isn't in use to transfer data from the
+	 * resampler directly to the backend
 	 *
-	 * @param {Float32Array} float32Array array containing resampled, interleaved audio data
+	 * @param {Float32Array} float32Array Mono or interleaved audio data
 	 */
 	_onResampleComplete(float32Array) {
 		this._backend.feed(float32Array);
@@ -139,4 +95,3 @@ export default class FeederNode {
 		}
 	}
 }
-

@@ -1,6 +1,22 @@
 export default class Worker {
-	postMessage() {
-		// call console.log so we can spy on the global console object to receive postMessage() calls
-		console.log();
+	postMessage(e) {
+		if (e.command === 'init') {
+			this.onmessage({
+				data: {
+					command: 'postInit'
+				}
+			});
+		} else if (e.command === 'feed') {
+			this.data = e.data;
+
+			this.onmessage({
+				data: e.data
+			});
+		} else if (e.command === 'connect') {
+			this.connected = true;
+		}
 	}
+
+	// this will be overwridden
+	onmessage(e) {}
 }

@@ -1,3 +1,4 @@
+// TODO: This should support more than 2 channels. no reason not to
 class RingBuffer {
 	
 	_bufferLength;

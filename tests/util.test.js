@@ -8,8 +8,6 @@ import {
 	checkFileExists,
 } from '../src/util';
 
-const waitForExpect = require('wait-for-expect');
-import mockConsole from 'jest-mock-console';
 import 'web-audio-test-api';
 import 'babel-polyfill';
 
@@ -170,89 +168,4 @@ test('writeInterleavedToChannels fails if nChannels isnt a number', () => {
 	expect(() => {
 		writeInterleavedToChannels(interleaved);
 	}).toThrow('nChannels must be an integer');
-});
-
-test('being unable to find processor notifies', (done) => {
-	const mockXHR = {
-		open: jest.fn(),
-		send: jest.fn(),
-		readyState: 4,
-		status: 404,
-		DONE: 4
-	}
-	const oldXMLHttpRequest = window.XMLHttpRequest;
-	window.XMLHttpRequest = jest.fn(() => mockXHR);
-
-	let path = '/blah';
-	const restoreConsole = mockConsole();
-
-	let con = new AudioContext();
-
-	checkFileExists(path)
-		.then(() => {
-
-		})
-		.catch(() => {
-			expect(console.error).toHaveBeenCalled();
-	    	restoreConsole();
-	    	global.AudioWorklet = undefined;
-	    	window.XMLHttpRequest = oldXMLHttpRequest;
-	    	done();
-	    });
-
-	mockXHR.onreadystatechange();
-});
-
-test('finding processor successfully does not notify', (done) => {
-	const mockXHR = {
-		open: jest.fn(),
-		send: jest.fn(),
-		readyState: 4,
-		status: 200,
-		DONE: 4
-	}
-	const oldXMLHttpRequest = window.XMLHttpRequest;
-	window.XMLHttpRequest = jest.fn(() => mockXHR);
-
-	let path = '/blah';
-	const restoreConsole = mockConsole();
-
-	checkFileExists(path)
-		.then(() => {
-			expect(console.error).not.toHaveBeenCalled();
-	    	restoreConsole();
-	    	global.AudioWorklet = undefined;
-	    	window.XMLHttpRequest = oldXMLHttpRequest;
-	    	done();
-		})
-		.catch(() => {
-
-		});
-
-	mockXHR.onreadystatechange();
-});
-
-test('finding processor with incorrect readyState does not notify', async () => {
-	const mockXHR = {
-		open: jest.fn(),
-		send: jest.fn(),
-		readyState: 3,
-		status: 200,
-	}
-	const oldXMLHttpRequest = window.XMLHttpRequest;
-	window.XMLHttpRequest = jest.fn(() => mockXHR);
-
-	let path = '/blah';
-	const restoreConsole = mockConsole();
-
-	checkFileExists(path);
-
-	mockXHR.onreadystatechange();
-
-	await waitForExpect(() => {
-		expect(console.error).not.toHaveBeenCalled();
-    	restoreConsole();
-    	global.AudioWorklet = undefined;
-    	window.XMLHttpRequest = oldXMLHttpRequest;
-	})
 });

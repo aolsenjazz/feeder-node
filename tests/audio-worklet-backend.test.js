@@ -1,129 +1,205 @@
 import 'web-audio-test-api';
 import 'babel-polyfill';
-import AudioWorkletBackend from '../src/audio-worklet-backend';
-const waitForExpect = require('wait-for-expect')
+import createAudioWorklet from 'AUDIO_WORKLET_BACKEND';
+import { BackendState } from '../src/abstract-backend';
 
-class MockAudioWorkletNode {
+class AudioWorkletNode {
+	connect(destination) {
 
-	constructor() {
-		this.connectCalled = false;
-		this.port = {
-			postMessage: (e) => {
-				if (e.command === 'connect') {
+	}
 
-					this.connectCalled = true;
-				}
-			}
-		}
+	disconnect() {
+
 	}
 
 	addModule(path) {
-		return new Promise((resolve, reject) => {
-			resolve();
-		});
+		this.path = path;
 	}
 
-	connect() {
+	port = {
+		postMessage: (data) => {
+			if (data.command === 'connect') {
+				this.connected = true;
+			} else if (data.command === 'bufferLengthChange') {
+				this.port.onmessage({data: { command: 'bufferLengthChange', bufferLength: data.bufferLength }});
+			} else if (data.command === 'stateChange') {
+				this.port.onmessage({data: { command: 'stateChange', state: data.state }})
+			} else if (data.command === 'bad command') {
+				this.port.onmessage({data: { command: 'bad command' }});
+			}
+		},
 
+		// gets overridden
+		onmessage: (data) => {}
 	}
 }
+global.AudioWorkletNode = AudioWorkletNode;
 
-global.AudioWorkletNode = MockAudioWorkletNode;
+AudioContext.prototype.audioWorklet = {};
+AudioContext.prototype.audioWorklet.addModule = async (path) => {}
 
-test('feed calls postMessage', async () => {
-	let con = new AudioContext();
+test('creating a new AudioWorkletBackend sets params correctly', (done) => {
+	let context = new AudioContext();
 
-	con.audioWorklet = new MockAudioWorkletNode();
+	let nChannels = 2;
+	let bufferLength = 192000;
+	let bufferThreshold = 4096;
+	let pathToWorklet = '/feeder-node.worklet.js;';
 
-	let awb = new AudioWorkletBackend(con, 128, 2, 1024, 4096, () => {}, undefined, '/randoPath');
+	createAudioWorklet(context, nChannels, bufferLength, bufferThreshold, pathToWorklet)
+		.then((backend) => {
+			expect(backend.nChannels).toBe(nChannels);
+			expect(backend.bufferLength).toBe(bufferLength);
 
-	awb.connect(con.createGain());
-
-	await waitForExpect(() => {
-		const spy = jest.spyOn(awb.audioNode.port, 'postMessage');	
-		awb.feed(new Float32Array([1,2,3]));
-		expect(spy).toHaveBeenCalledTimes(1);
-	});
+			done();
+		});
 });
 
-test('disconnect calls audioNode.disconnect', () => {
-	let con = new AudioContext();
+test ('calling feed() on uninitialized backend warns', (done) => {
+	let context = new AudioContext();
 
-	con.audioWorklet = new MockAudioWorkletNode();
+	let nChannels = 2;
+	let bufferLength = 192000;
+	let bufferThreshold = 4096;
+	let pathToWorklet = '/feeder-node.worklet.js;';
 
-	let awb = new AudioWorkletBackend(con, 128, 2, 1024, 4096, () => {}, undefined, '/randoPath');
-	awb.audioNode = {
-		disconnect: () => {}
-	}
+	let consoleWarn = global.console.warn;
+	global.console.warn = jest.fn(); // shut console.warn up
+	let spy = jest.spyOn(global.console, 'warn');
 
-	const spy = jest.spyOn(awb.audioNode, 'disconnect');	
-	awb.disconnect();
-	expect(spy).toHaveBeenCalledTimes(1);
+	createAudioWorklet(context, nChannels, bufferLength, bufferThreshold, pathToWorklet)
+		.then((backend) => {
+			backend.state = BackendState.UNINITIALIZED;
+			backend.feed(new Float32Array(10));
+
+			expect(spy).toHaveBeenCalledTimes(1);
+			global.console.warn = consoleWarn; // reset console.warn
+			done();
+		});
 });
 
-test('calling _onMessage command bufferLengthChange changes buffer length', () => {
-	let con = new AudioContext();
+test ('calling feed() on initialized backend sends correct data to audioNode', (done) => {
+	let context = new AudioContext();
 
-	con.audioWorklet = new MockAudioWorkletNode();
+	let nChannels = 2;
+	let bufferLength = 192000;
+	let bufferThreshold = 4096;
+	let pathToWorklet = '/feeder-node.worklet.js;';
 
-	let awb = new AudioWorkletBackend(con, 128, 2, 1024, 4096, () => {}, undefined, '/randoPath');
+	let array = new Float32Array([1,2,3,4]);
 
-	awb._onMessage({data: {command: 'bufferLengthChange', bufferLength: 420}});
+	createAudioWorklet(context, nChannels, bufferLength, bufferThreshold, pathToWorklet)
+		.then((worklet) => {
+			worklet.audioNode = {port: {}};
+			worklet.audioNode.port.postMessage = (data) => {
+				expect(data.command).toBe('feed');
+				expect(JSON.stringify(data.data)).toBe(JSON.stringify(array));
+				done();
+			}
 
-	expect(awb.bufferLength).toBe(420);
+			worklet.feed(array);
+		});
 });
 
-test('calling _onMessage unknown command throws', () => {
-	let con = new AudioContext();
+test('setPort() passes connect command to audio thread', (done) => {
+	let context = new AudioContext();
 
-	con.audioWorklet = new MockAudioWorkletNode();
+	let nChannels = 2;
+	let bufferLength = 192000;
+	let bufferThreshold = 4096;
+	let pathToWorklet = '/feeder-node.worklet.js;';
 
-	let awb = new AudioWorkletBackend(con, 128, 2, 1024, 4096, () => {}, undefined, '/randoPath');
+	createAudioWorklet(context, nChannels, bufferLength, bufferThreshold, pathToWorklet)
+		.then((backend) => {
+			backend.setPort('yo momma');
+			expect(backend.audioNode.connected).toBe(true);
+			done();
+		});
+});
 
+test('disconnect() calls audioNode disconnect()', (done) => {
+	let context = new AudioContext();
+
+	let nChannels = 2;
+	let bufferLength = 192000;
+	let bufferThreshold = 4096;
+	let pathToWorklet = '/feeder-node.worklet.js;';
+
+	createAudioWorklet(context, nChannels, bufferLength, bufferThreshold, pathToWorklet)
+		.then((worklet) => {
+			let spy = jest.spyOn(worklet.audioNode, 'disconnect');
+			worklet.disconnect();
+
+			expect(spy).toHaveBeenCalledTimes(1);
+
+			done();
+		});
+});
+
+test('connect() calls audioNode.connect()', (done) => {
+	let context = new AudioContext();
+
+	let nChannels = 2;
+	let bufferLength = 192000;
+	let bufferThreshold = 4096;
+	let pathToWorklet = '/feeder-node.worklet.js;';
+
+	createAudioWorklet(context, nChannels, bufferLength, bufferThreshold, pathToWorklet)
+		.then((worklet) => {
+			let spy = jest.spyOn(worklet.audioNode, 'connect');
+			worklet.connect();
+
+			expect(spy).toHaveBeenCalledTimes(1);
+
+			done();
+		});
+});
+
+test('audioNode.port.onmessage command bufferLengthChange updates bufferlength', (done) => {
+	let context = new AudioContext();
+
+	let nChannels = 2;
+	let bufferLength = 192000;
+	let bufferThreshold = 4096;
+	let pathToWorklet = '/feeder-node.worklet.js;';
+
+	createAudioWorklet(context, nChannels, bufferLength, bufferThreshold, pathToWorklet)
+		.then((worklet) => {
+			worklet.audioNode.port.postMessage({command: 'bufferLengthChange', bufferLength: 1024 });
+			expect(worklet.bufferLength).toBe(1024);
+			done();
+		});
+});
+
+test('audioNode.port.onmessage command stateChange calls onStateChange', (done) => {
+	let context = new AudioContext();
+
+	let nChannels = 2;
+	let bufferLength = 192000;
+	let bufferThreshold = 4096;
+	let pathToWorklet = '/feeder-node.worklet.js;';
+
+	createAudioWorklet(context, nChannels, bufferLength, bufferThreshold, pathToWorklet)
+		.then((worklet) => {
+			worklet.onStateChange = jest.fn();
+			let spy = jest.spyOn(worklet, 'onStateChange');
+			worklet.audioNode.port.postMessage({command: 'stateChange', state: 102 });
+			expect(spy).toHaveBeenCalledTimes(1);
+			done();
+		});
+});
+
+test('audioNode.port.onmessage bad command throws', async () => {
+	let context = new AudioContext();
+
+	let nChannels = 2;
+	let bufferLength = 192000;
+	let bufferThreshold = 4096;
+	let pathToWorklet = '/feeder-node.worklet.js;';
+
+	let worklet = await createAudioWorklet(context, nChannels, bufferLength, bufferThreshold, pathToWorklet);
+	
 	expect(() => {
-		awb._onMessage({data: {command: 'rando', bufferLength: 420}});
-	}).toThrow('command rando unrecognized');
-});
-
-test('connecting the backend while port !== undefined sends a connect command', async () => {
-	let con = new AudioContext();
-
-	con.audioWorklet = new MockAudioWorkletNode();
-
-	let awb = new AudioWorkletBackend(con, 128, 2, 1024, 4096, () => {}, {postMessage: () => {}}, '/randoPath');
-
-	awb.connect(con.createGain());
-
-	await waitForExpect(() => {
-		expect(awb.audioNode.connectCalled).toBe(true);
-	});
-});
-
-test('connecting the backend while port === undefined doesnt send a connect command', async () => {
-	let con = new AudioContext();
-
-	con.audioWorklet = new MockAudioWorkletNode();
-
-	let awb = new AudioWorkletBackend(con, 128, 2, 1024, 4096, () => {}, undefined, '/randoPath');
-
-	awb.connect(con.createGain());
-
-	await waitForExpect(() => {
-		expect(awb.audioNode.connectCalled).toBe(false);
-	});
-});
-
-test('calling _onMessage command stateChange changes calls _stateChangeCb', () => {
-	let con = new AudioContext();
-
-	con.audioWorklet = new MockAudioWorkletNode();
-	let called = false;
-
-	let awb = new AudioWorkletBackend(con, 128, 2, 1024, 4096,() => {
-		called = true;
-	}, '/randoPath');
-
-	awb._onMessage({data: {command: 'stateChange'}});
-
-	expect(called).toBe(true);
+		worklet.audioNode.port.postMessage({command: 'bad command' });
+	}).toThrow('command bad command unrecognized');
 });

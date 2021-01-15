@@ -1,0 +1,93 @@
+<!-- 
+
+Trivial, unrealistic example of how FeederNode can be used. In this example, we feed around
+1 second of audio to the feederNode every second using setTimeout. 
+
+In practice, one should use an AudioBufferSourceNode for this; this is just an example
+
+-->
+<html>
+	<input type="file" accept="audio" id="input"/>
+	<button id="play">Feed 1 second of audio</button>
+
+	<script src="https://cdn.jsdelivr.net/npm/wavefile"></script>
+	<script src="/dist/feeder-node.js"></script>
+	<script>
+		// get dom objects, initialize some values
+		var input = document.getElementById('input');
+		var play  = document.getElementById('play');
+		var samples, nChannels, sampleRate, context, feederNode;
+		var initialized = false;
+
+		// load a .wav file
+		var reader = new FileReader();
+		reader.onload = function(e) {
+			// create a WaveFile object + get meta information
+			var safariFixed = e.target.result.split('base64,')[1]; // 
+			wav = new wavefile.WaveFile();
+			wav.fromBase64(safariFixed);
+
+			nChannels = wav.fmt.numChannels;
+			sampleRate = wav.fmt.sampleRate;
+
+			// Convert samples from Int16Array to Float32Array, where -1 < sample < 1
+			samples = wav.getSamples(true, Int16Array);
+			var float32 = new Float32Array(samples);
+
+			for (var i = 0; i < samples.length; i++) {
+				float32[i] = samples[i] / 32767;
+			}
+
+			samples = float32;
+		}
+		input.onchange = (e) => reader.readAsDataURL(e.target.files[0]);
+
+		play.onclick = async () => {
+			// Initialize audio context and feederNode
+			var AudioCtx = window.AudioContext || window.webkitAudioContext;
+			context = new AudioCtx({sampleRate: 48000});
+
+			feederNode = await FeederNode(context, nChannels, { 
+				inputSampleRate: sampleRate,
+				bufferThreshold: 8192,
+				pathToWasm: '/dist/libsamplerate.wasm',
+				pathToWorklet: '/dist/feeder-node.worklet.js',
+				pathToWorker: '/dist/feeder-node.worker.js'
+			});
+
+			feederNode.connect(context.destination);
+			
+			// Begin feeding audio
+			startAudioInterval();
+		}
+
+		// every second, feed 1 second (or remaining amount) of audio data
+		function startAudioInterval() {
+			var offset = 0;
+			var samplesPerSecond = 45000; // send just over 1 second of audio to account for setTimeout variance
+			var id = setInterval(() => {
+				// find out how much data to push to feederNode
+				var chunkSize = samplesPerSecond * nChannels;
+				var dataAvailable = samples.length - offset;
+				chunkSize = Math.min(chunkSize, dataAvailable);
+
+				// if we're out of audio data, stop feeding
+				if (chunkSize <= 0) {
+					clearInterval(id);
+					return;
+				}
+
+				// create a "chunk"
+				var data = new Float32Array(chunkSize);
+				for (var i = 0; i < chunkSize; i++) {
+					data[i] = samples[offset + i];
+				}
+
+				// feed
+				feederNode.feed(data);
+
+				offset += chunkSize; // underlying buffer in WaveFile is float64
+			}, 1000);
+		}
+	</script>
+</html>

@@ -14,24 +14,42 @@ let commonConfig = {
 						]
 					}
 				}
-			},
-			{
-				test: /feeder-node.worker.js/,
-				use: { loader: 'worker-loader' }
 			}
 		],
 	},
-	entry: './src/feeder-node.js',
 	mode: 'production',
+}
+
+let workletConfig = Object.assign({}, commonConfig, {
+	entry: './src/feeder-node.worklet.js',
+	output: {
+		filename: 'feeder-node.worklet.js',
+		path: path.resolve(__dirname, 'dist')
+
+	},
+});
+
+let workerConfig = Object.assign({}, commonConfig, {
+	entry: './src/feeder-node.worker.js',
+	output: {
+		filename: 'feeder-node.worker.js',
+		path: path.resolve(__dirname, 'dist')
+
+	},
+});
+
+let moduleConfig = Object.assign({}, commonConfig, {
+	entry: './src/feeder-node-create.js',
 	output: {
 		filename: 'feeder-node.js',
 		path: path.resolve(__dirname, 'dist'),
 		library: 'FeederNode',
-		libraryExport: 'default',
 		libraryTarget: 'umd',
+	},
+});
 
-	}
-}
-
-
-module.exports = commonConfig
+module.exports = [
+	moduleConfig,
+	workletConfig,
+	workerConfig
+];

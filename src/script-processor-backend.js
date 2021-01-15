@@ -5,17 +5,27 @@ import { writeSilence } from './util';
 /** Class that manages a ScriptProcessor to playback PCM audio */
 export default class ScriptProcessorBackend extends AbstractBackend {
 
-	constructor(context, batchSize, nChannels, bufferLength, bufferThreshold, stateChangeCb, port) {
+	/**
+	 *
+	 * @param { AudioContext } context         The parent AudioContext
+	 * @param { Number }       nChannels       The number of input and output channels
+	 * @param { Number }       batchSize       The number of samples (per channel) processed per call to
+	 *                                         _playNext(). Generally, higher values (2048, 4096, 8192...)
+	 *                                         should be preferred to reduce CPU load
+	 * @param { Number }       bufferLength    The length of the RingBuffer. See ring-buffer.js for more
+	 * @param { Number }       bufferThreshold The minimum number of sample which must be buffered before
+	 *                                         audio begins propagating to the next AudioNode in the graph
+	 */
+	constructor(context, nChannels, batchSize, bufferLength, bufferThreshold) {
 		super();
 
 		this.batchSize = batchSize;
 		this.nChannels = nChannels;
 		this.bufferThreshold = bufferThreshold;
-		this._stateChangeCb = stateChangeCb;
-		this._processor = context.createScriptProcessor(this.batchSize, 0, this.nChannels);
+		this._processor = context.createScriptProcessor(batchSize, 0, nChannels);
 		this._processor.onaudioprocess = this._playNext.bind(this);
 
-		this._buffer = new RingBuffer(bufferLength, this.nChannels);
+		this._buffer = new RingBuffer(bufferLength, nChannels);
 		this.state = BackendState.READY;
 	}
 
@@ -30,6 +40,22 @@ export default class ScriptProcessorBackend extends AbstractBackend {
 	 */
 	feed(float32Array) {
 		this._buffer.write(float32Array);
+	}
+
+	/**
+	 * Connects the ScriptProcessorNode to the given destination AudioNode
+	 * 
+	 * @param {AudioNode} destination The node to which FeederNode will connect
+	 */
+	connect(destination) {
+		this._processor.connect(destination);
+	}
+
+	/**
+	 * Disconnect from the connected AudioNode
+	 */
+	disconnect() {
+		this._processor.disconnect();
 	}
 
 	/**
@@ -53,30 +79,7 @@ export default class ScriptProcessorBackend extends AbstractBackend {
 			default:
 		}
 
-		if (staleState != this.state) this._notifyStateChange();
-	}
-
-	/**
-	 * Notifies the parent FeederNode of the state change
-	 */
-	_notifyStateChange() {
-		this._stateChangeCb(this.state);
-	}
-
-	/**
-	 * Connects the ScriptProcessorNode to the given output AudioNode
-	 * 
-	 * @param {AudioNode} output The node to which FeederNode will connect
-	 */
-	connect(output) {
-		this._processor.connect(output);
-	}
-
-	/**
-	 * Disconnect from the connected AudioNode
-	 */
-	disconnect() {
-		this._processor.disconnect();
+		if (staleState != this.state) this.onStateChange(this.state);
 	}
 
 	/**

@@ -1,4 +1,4 @@
-import MainThreadResampler from '../src/main-thread-resampler';
+import MainThreadResampler from 'MAIN_THREAD_RESAMPLER';
 
 test('mtr just returns data if inputSr === outputSr', (done) => {
 	let correct = new Float32Array([1,2,3,4]);
@@ -8,7 +8,8 @@ test('mtr just returns data if inputSr === outputSr', (done) => {
 		done();
 	}
 
-	let mtr = new MainThreadResampler(44100, 44100, 1, cb);
+	let mtr = new MainThreadResampler(1, 44100, 44100);
+	mtr.onProcessed = cb;
 
 	mtr.processBatch(correct);
 });
@@ -22,7 +23,8 @@ test('mtr resamples mono correctly', (done) => {
 		done();
 	}
 
-	let mtr = new MainThreadResampler(44100, 88200, 1, cb);
+	let mtr = new MainThreadResampler(1, 44100, 88200);
+	mtr.onProcessed = cb;
 
 	mtr.processBatch(original);
 });
@@ -36,7 +38,8 @@ test('mtr resamples stereo correctly', (done) => {
 		done();
 	}
 
-	let mtr = new MainThreadResampler(44100, 88200, 2, cb);
+	let mtr = new MainThreadResampler(2, 44100, 88200);
+	mtr.onProcessed = cb;
 
 	mtr.processBatch(original);
 });
@@ -46,7 +49,8 @@ test('mtr expands buffer to accomodate for large batch', () => {
 
 	const cb = (data) => {}
 
-	let mtr = new MainThreadResampler(44100, 88200, 1, cb);
+	let mtr = new MainThreadResampler(1, 44100, 88200);
+	mtr.onProcessed = cb;
 
 	mtr.processBatch(bigInterleaved);
 

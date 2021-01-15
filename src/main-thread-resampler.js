@@ -2,15 +2,21 @@ import AbstractProcessor from './abstract-processor';
 import LinearResampler from './resampler'
 import { copyInterleavedToChannels, writeChannelsToInterleaved } from './util';
 
-const BYTES_PER_FLOAT32 = 4;
-
 /** 
  * Class that resamples audio data on the main thread. Since almost all browsers support web workers
  * at this point, this will probably never be used; worker-resampler.js will be used instead
  */
 export default class MainThreadResampler extends AbstractProcessor {
-	constructor(inputSampleRate, outputSampleRate, nChannels, onProcessedCallback) {
-		super(inputSampleRate, outputSampleRate, onProcessedCallback);
+
+	/**
+	 * Constructor
+	 * 
+	 * @param { Number } nChannels        The number of input and output channels
+	 * @param { Number } inputSampleRate  Sample rate of incoming audio
+	 * @param { Number } outputSampleRate Sample rate which outgoing audio must be
+	 */
+	constructor(nChannels, inputSampleRate, outputSampleRate) {
+		super(inputSampleRate, outputSampleRate);
 
 		this.nChannels = nChannels;
 
@@ -26,7 +32,7 @@ export default class MainThreadResampler extends AbstractProcessor {
 	 * @param {Float32Array} interleavedFloat32Data the data to be resampled
 	 */
 	processBatch(interleavedFloat32Data) {
-		if (this.inputSampleRate === this.outputSampleRate) return this._onProcessedCallback(interleavedFloat32Data);
+		if (this.inputSampleRate === this.outputSampleRate) return this.onProcessed(interleavedFloat32Data);
 
 		let dataPerChannel = interleavedFloat32Data.length / this.nChannels;
 
@@ -41,6 +47,6 @@ export default class MainThreadResampler extends AbstractProcessor {
 		let resampledBuffers = this._resampler.resample(trimmedBuffers);
 		let reinterleaved = writeChannelsToInterleaved(resampledBuffers);
 
-		this._onProcessedCallback(reinterleaved);
+		this.onProcessed(reinterleaved);
 	}
 }

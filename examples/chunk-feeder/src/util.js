@@ -1,4 +1,30 @@
 /**
+ * Checks that the file is present at the URL specified. If not, warns the user.
+ * This is an unfortunately method that we need because WebAudio gives a terrible error message. More:
+ * https://github.com/WebAudio/web-audio-api/issues/1846
+ *
+ * @param {String} pathToWorkletProcessor the path to feeder-node.processor.js
+ */
+export function checkFileExists(pathToFile) {
+	return new Promise((resolve, reject) => {
+		let xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function() {
+			let doneReadyState = 4;
+			if (xhr.readyState === doneReadyState) {
+				if (xhr.status === 404) {
+					console.error(`Unable to find file at ${pathToFile}. You can change this url using the FeederNode constructor options arg`)
+					reject();
+				} else {
+					resolve();
+				}
+			}
+		}
+		xhr.open('GET', pathToFile, true);
+		xhr.send();
+	});
+}
+
+/**
  * Writes 0 at every index in every channel
  * @param {Array} targetChannels An array of TypedArrays
  */

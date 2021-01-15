@@ -1,7 +1,7 @@
 // feeder-node.worker.js is currently mocked, so load the actual file using this alias
 const WORKER_ALIAS = 'FEEDER_NODE_WORKER';
 
-test('calling feed without message port send data back to main thread', () => {
+test('calling feed without message port send data back to main thread', (done) => {
 	let postMessageCalled = false;
 
 	global.onmessage = () => {};
@@ -9,53 +9,71 @@ test('calling feed without message port send data back to main thread', () => {
 
 	require(WORKER_ALIAS);
 
-	onmessage({data: {command: 'init', inputSampleRate: 44100, outputSampleRate: 44100, nChannels: 1}});
-	onmessage({data: {command: 'feed', data: new Float32Array(1,2,3)}});
+	global.onmessage({data: {command: 'init', inputSampleRate: 44100, outputSampleRate: 44100, nChannels: 1, converterType: 0}});
 
-	expect(postMessageCalled).toBe(true);
+	setTimeout(() => {
+		onmessage({data: {command: 'feed', data: new Float32Array(1,2,3)}});
+		expect(postMessageCalled).toBe(true);
+		jest.resetModules(); // clean up or else it breaks on future tests
+		done();
+	}, 100);
 
-	jest.resetModules(); // clean up or else it breaks on future tests
 });
 
-test('calling feed with message port sends data thru port', () => {
+test('calling feed with message port sends data thru port', (done) => {
 	let postMessageCalled = false;
 
 	global.onmessage = () => {};
 
 	require(WORKER_ALIAS);
 
-	onmessage({data: {command: 'init', inputSampleRate: 44100, outputSampleRate: 44100, nChannels: 1}});
-	onmessage({ports: [{postMessage: () => {postMessageCalled = true}}], data: {command: 'connect'}});
+	onmessage({data: {command: 'init', inputSampleRate: 44100, outputSampleRate: 44100, nChannels: 1, converterType: 0}});
+
+	setTimeout(() => {
+		onmessage({ports: [{postMessage: () => {postMessageCalled = true}}], data: {command: 'connect'}});
 	
-	onmessage({data: {command: 'feed', data: new Float32Array(1,2,3)}});
+		onmessage({data: {command: 'feed', data: new Float32Array(1,2,3)}});
 
-	expect(postMessageCalled).toBe(true);
+		expect(postMessageCalled).toBe(true);
 
-	jest.resetModules(); // clean up or else it breaks on future tests
+		jest.resetModules(); // clean up or else it breaks on future tests
+		done();
+	}, 100);
 });
 
-test('calling init doesnt throw (cant reach modified objects)', () => {
-	let postMessageCalled = false;
-
+test('calling init resolves successfully', (done) => {
 	global.onmessage = () => {};
 
 	require(WORKER_ALIAS);
 
-	onmessage({data: {command: 'init', inputSampleRate: 69, outputSampleRate: 420, nChannels: 1337}});
+	const consoleLog = global.console.log;
+	global.console.log = jest.fn();
+	const spy = jest.spyOn(global.console, 'log');
+ 
+	onmessage({data: {command: 'init', inputSampleRate: 69, outputSampleRate: 420, nChannels: 1337, converterType:0}});
 
-	jest.resetModules(); // clean up or else it breaks on future tests
+	setTimeout(() => {
+
+		expect(spy).toHaveBeenCalledTimes(1);
+		global.console.log = consoleLog; // reset console
+		jest.resetModules(); // clean up or else it breaks on future tests
+		done();
+	}, 100);
 });
 
-test('calling unknown command throws', () => {
-	let postMessageCalled = false;
-
+test('calling unknown command throws', (done) => {
 	global.onmessage = () => {};
 
 	require(WORKER_ALIAS);
 
-	expect(() => {
-		onmessage({data: {command: 'nonexistent'}});
-	}).toThrow('received unrecognized command');
+	onmessage({data: {command: 'nonexistent'}})
+		.then(() => {
+
+		})
+		.catch((err) => {
+			expect(err).toBe('received unrecognized command')
+			done();
+		});
 
 	jest.resetModules(); // clean up or else it breaks on future tests
 });

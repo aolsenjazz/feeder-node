@@ -1,39 +1,86 @@
-import WorkerResampler from '../src/worker-resampler';
+import createWorkerResampler from 'WORKER_RESAMPLER';
+import Worker from '../src/feeder-node.worker.js';
 
-beforeAll(() => {
-	// shut console.log up
-	const consoleLog = global.console.log;
-	global.console = { log: jest.fn() }
+global.Worker = Worker;
+
+test('createWorkerResampler() resolves with a new instance', (done) => {
+	let nChannels = 2;
+	let inputSampleRate = 44100;
+	let outputSampleRate = 48000;
+	let converterType = 0;
+	let workerPath = '../src/feeder-node.worker.js';
+	let wasmPath = 'doesnt matter';
+
+	createWorkerResampler(nChannels, inputSampleRate, outputSampleRate, converterType, workerPath, wasmPath)
+		.then((resampler) => {
+			expect(resampler.constructor.name).toBe('WorkerResampler');
+			done();
+		})
+		.catch((err) => {
+			throw err;
+		});
 });
 
-test('processBatch invokes worker.postMessage', () => {
-	let resampler = new WorkerResampler(44100, 44100, 1, () => {});
+test('calling processBatch() passes data to worker', (done) => {
+	let nChannels = 2;
+	let inputSampleRate = 44100;
+	let outputSampleRate = 48000;
+	let converterType = 0;
+	let workerPath = '../src/feeder-node.worker.js';
+	let wasmPath = 'doesnt matter';
 
-	const spy = jest.spyOn(resampler.worker, 'postMessage');
-	resampler.processBatch(new Float32Array(128));
-	expect(spy).toHaveBeenCalledTimes(1);
+	createWorkerResampler(nChannels, inputSampleRate, outputSampleRate, converterType, workerPath, wasmPath)
+		.then((resampler) => {
+			resampler.onProcessed = () => {};
+			let data = new Float32Array([1,2,3,4]);
+			resampler.processBatch(data);
+			expect(JSON.stringify(resampler.worker.data)).toBe(JSON.stringify(data));
+			done();
+		})
+		.catch((err) => {
+			throw err;
+		});
 });
 
-test('_onMessage correctly invokes callback', (done) => {
-	const cb = (data) => {
-		expect(JSON.stringify(data)).toBe(JSON.stringify(new Float32Array(0)));
-		done();
-	}
+test('calling setPort() passes port to the worker', (done) => {
+	let nChannels = 2;
+	let inputSampleRate = 44100;
+	let outputSampleRate = 48000;
+	let converterType = 0;
+	let workerPath = '../src/feeder-node.worker.js';
+	let wasmPath = 'doesnt matter';
 
-	let resampler = new WorkerResampler(44100, 44100, 1, cb);
-
-	resampler.worker.onmessage({data: new Float32Array(0)});
+	createWorkerResampler(nChannels, inputSampleRate, outputSampleRate, converterType, workerPath, wasmPath)
+		.then((resampler) => {
+			resampler.setPort('yo');
+			expect(resampler.worker.connected).toBe(true);
+			done();
+		})
+		.catch((err) => {
+			throw err;
+		});
 });
 
-test('sends connect command if port != undefined', () => {
-	// we need to watch console.log calls, so reset it
-	const consoleLog = global.console.log;
-	global.console = { log: jest.fn() }
-	const spy = jest.spyOn(global.console, 'log');
+test('calling processBatch() calls onProcessed() once complete', (done) => {
+	let nChannels = 2;
+	let inputSampleRate = 44100;
+	let outputSampleRate = 48000;
+	let converterType = 0;
+	let workerPath = '../src/feeder-node.worker.js';
+	let wasmPath = 'doesnt matter';
 
-	let resampler = new WorkerResampler(44100, 44100, 1, () => {}, {});
+	createWorkerResampler(nChannels, inputSampleRate, outputSampleRate, converterType, workerPath, wasmPath)
+		.then((resampler) => {
+			let data = new Float32Array([1,2,3,4]);
 
-	expect(spy).toHaveBeenCalledTimes(2);
-
-	global.console = { log: consoleLog }; // reset console.log
+			resampler.onProcessed = (processed) => {
+				expect(JSON.stringify(processed)).toBe(JSON.stringify(data));
+				done();
+			}
+			
+			resampler.processBatch(data);
+		})
+		.catch((err) => {
+			throw err;
+		});
 });

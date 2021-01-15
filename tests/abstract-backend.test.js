@@ -20,3 +20,13 @@ test('calling disconnect fails', () => {
 		backend.disconnect();
 	}).toThrow('disconnect() must be implemented');
 });
+
+test('setPort() doesnt do anything', () => {
+	let backend = new AbstractBackend();
+	backend.setPort();
+});
+
+test('onStateChange() doesnt do anything', () => {
+	let backend = new AbstractBackend();
+	backend.onStateChange();
+});
