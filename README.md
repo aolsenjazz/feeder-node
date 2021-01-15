@@ -1,4 +1,7 @@
 # FeederNode
+
+![AppVeyor](https://img.shields.io/appveyor/build/aolsenjazz/feeder-node)   [![Coverage Status](https://coveralls.io/repos/github/aolsenjazz/feeder-node/badge.svg?branch=master)](https://coveralls.io/github/aolsenjazz/feeder-node?branch=master)   [![Maintainability](https://api.codeclimate.com/v1/badges/b032545e996af9dbc61b/maintainability)](https://codeclimate.com/github/aolsenjazz/feeder-node/maintainability)   ![Depfu](https://img.shields.io/depfu/aolsenjazz/feeder-node)
+
 FeederNode is a [pseudo](https://github.com/WebAudio/web-audio-api/issues/251)-[AudioNode](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode) which can be fed audio data for instant playback. This library is ideal for consuming real-time audio data, e.g. data received from WebRTC or Websocket connections. Uses modern technologies such as WebAssembly, AudioWorklet, and Web Workers if they're available, falling back to more older systems if not.
 
 #### Features:
