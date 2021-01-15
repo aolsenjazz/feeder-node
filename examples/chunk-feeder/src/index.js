@@ -1,7 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import createFeederNode from '../../../dist/feeder-node.js';
+import { createFeederNode } from '../../../dist/feeder-node.js';
+// or
+// const createFeederNode = require('../../../dist/feeder-node.js').createFeederNode;
 
 import { useState, useEffect, useCallback } from 'react';
 import { WaveFile } from 'wavefile';
@@ -12,7 +14,6 @@ import { toFloat32 } from './util';
 let offset = 0;
 
 function App() {
-	const [nChannels, setNChannels]   = useState(undefined);
 	const [samples, setSamples]       = useState(undefined);
 	const [wav, setWav]               = useState(new WaveFile());
 	const [context, setContext]       = useState(undefined);
@@ -70,14 +71,13 @@ function App() {
 	});
 	
 	return (
-	<div className="App">
-		<div>
-			<h1>FeederNode React Example</h1>
-			<input id="id" type="file" accept="audio" /><br></br><br></br>
-			<button onClick={feed}>Start</button>
+		<div className="App">
+			<div>
+				<h1>FeederNode React Example</h1>
+				<input id="id" type="file" accept="audio" /><br></br><br></br>
+				<button onClick={feed}>Feed 1 Second of Data</button>
+			</div>
 		</div>
-		
-	</div>
 	);
 }
 

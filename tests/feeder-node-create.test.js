@@ -1,7 +1,7 @@
 import 'web-audio-test-api';
 import 'babel-polyfill';
 
-import create from '../src/feeder-node-create.js';
+import { createFeederNode } from '../src/feeder-node-create.js';
 
 class MessageChannelMock {
 
@@ -19,7 +19,7 @@ test('vaidate() nChannels < 1 fails', (done) => {
 		inputSampleRate: 44100
 	}
 
-	create(context, nChannels, options)
+	createFeederNode(context, nChannels, options)
 		.then((feederNode) => {
 
 		})
@@ -40,7 +40,7 @@ test('validate() nChannels > 2 fails', (done) => {
 		inputSampleRate: 44100
 	}
 
-	create(context, nChannels, options)
+	createFeederNode(context, nChannels, options)
 		.then((feederNode) => {
 
 		})
@@ -61,7 +61,7 @@ test('validate() nChannels undefined fails', (done) => {
 		inputSampleRate: 44100
 	}
 
-	create(context, nChannels, options)
+	createFeederNode(context, nChannels, options)
 		.then((feederNode) => {
 
 		})
@@ -82,7 +82,7 @@ test('validate() batchSize not in supported sizes fails', (done) => {
 		inputSampleRate: 44100
 	}
 
-	create(context, nChannels, options)
+	createFeederNode(context, nChannels, options)
 		.then((feederNode) => {
 
 		})
@@ -103,7 +103,7 @@ test('validate() bufferLength < 16384 fails', (done) => {
 		inputSampleRate: 44100
 	}
 
-	create(context, nChannels, options)
+	createFeederNode(context, nChannels, options)
 		.then((feederNode) => {
 
 		})
@@ -124,7 +124,7 @@ test('validate() bufferThreshold < 0 fails', (done) => {
 		inputSampleRate: 44100
 	}
 
-	create(context, nChannels, options)
+	createFeederNode(context, nChannels, options)
 		.then((feederNode) => {
 
 		})
@@ -145,7 +145,7 @@ test('validate() bufferThreshold > bufferLength', (done) => {
 		inputSampleRate: 44100
 	}
 
-	create(context, nChannels, options)
+	createFeederNode(context, nChannels, options)
 		.then((feederNode) => {
 
 		})
@@ -166,7 +166,7 @@ test('validate() converterType < 0 fails', (done) => {
 		inputSampleRate: 44100
 	}
 
-	create(context, nChannels, options)
+	createFeederNode(context, nChannels, options)
 		.then((feederNode) => {
 
 		})
@@ -187,7 +187,7 @@ test('validate() converterType > 4 fails', (done) => {
 		inputSampleRate: 44100
 	}
 
-	create(context, nChannels, options)
+	createFeederNode(context, nChannels, options)
 		.then((feederNode) => {
 
 		})
@@ -208,7 +208,7 @@ test('validate() inputSampleRate < 1 fails', (done) => {
 		inputSampleRate: -1
 	}
 
-	create(context, nChannels, options)
+	createFeederNode(context, nChannels, options)
 		.then((feederNode) => {
 
 		})
@@ -229,7 +229,7 @@ test('validate() inputSampleRate > 192000 fails', (done) => {
 		inputSampleRate: 192001
 	}
 
-	create(context, nChannels, options)
+	createFeederNode(context, nChannels, options)
 		.then((feederNode) => {
 
 		})
@@ -247,7 +247,7 @@ test('createResample() with no WebAssembly support creates MainThreadResampler',
 	const wasm = window.WebAssembly;
 	global.WebAssembly = undefined;
 
-	create(context, nChannels)
+	createFeederNode(context, nChannels)
 		.then((feederNode) => {
 			expect(feederNode._resampler.constructor.name).toBe('MainThreadResampler');
 			done();
@@ -262,7 +262,7 @@ test('createResample() with WebAssembly support creates WorkerResampler', (done)
 	let context = new AudioContext();
 	let nChannels = 2;
 
-	create(context, nChannels)
+	createFeederNode(context, nChannels)
 		.then((feederNode) => {
 			expect(feederNode._resampler.constructor.name).toBe('WorkerResampler');
 			done();
@@ -277,7 +277,7 @@ test('createBackend() with no AudioWorklet support create ScriptProcessorBackend
 	let context = new AudioContext();
 	let nChannels = 2;
 
-	create(context, nChannels)
+	createFeederNode(context, nChannels)
 		.then((feederNode) => {
 			expect(feederNode._backend.constructor.name).toBe('ScriptProcessorBackend');
 			done();
@@ -294,7 +294,7 @@ test('createBackend() with AudioWorklet support creates AudioWorkletBackend', (d
 
 	global.AudioWorklet = {}; // see note
 
-	create(context, nChannels)
+	createFeederNode(context, nChannels)
 		.then((feederNode) => {
 			expect(feederNode._backend.constructor.name).toBe('AudioWorkletBackend');
 			done();

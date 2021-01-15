@@ -1,5 +1,5 @@
-# Feeder Node
-Feeder node is a [pseudo](https://github.com/WebAudio/web-audio-api/issues/251)-[AudioNode](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode) which can be fed audio data for instant playback. This library is ideal for consuming real-time audio data, e.g. data received from WebRTC or Websocket connections. Uses modern technologies such as WebAssembly, AudioWorklet, and Web Workers if they're available, falling back to more primitive methods if not.
+# FeederNode
+FeederNode is a [pseudo](https://github.com/WebAudio/web-audio-api/issues/251)-[AudioNode](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode) which can be fed audio data for instant playback. This library is ideal for consuming real-time audio data, e.g. data received from WebRTC or Websocket connections. Uses modern technologies such as WebAssembly, AudioWorklet, and Web Workers if they're available, falling back to more older systems if not.
 
 #### Features:
 - [AudioNode](https://developer.mozilla.org/en-US/docs/Web/API/AudioNode)-like API
@@ -23,7 +23,7 @@ createFeederNode(context, nChannels, {
 	pathToWorker:  '/some/path/to/feeder-node.worker.js'   // default '/feeder-node.worker.js'
 });
 ```
-See **Usage** or **API** for more examples and instructions.
+See **Configuration** for more instructions on using the `options` dict.
 
 ## Usage
 
@@ -31,12 +31,13 @@ FeederNode expects to receive mono or interleaved multi-channel data. Any TypedA
 
 ### In modules:
 ```javascript
-import createFeederNode from '@alexanderolsen/feeder-node'; 
+import { createFeederNode } from '@alexanderolsen/feeder-node'; 
 
 let context   = new AudioContext();
 let nChannels = 2;
+let options = {}; // see **Configuration**
 
-createFeederNode(context, nChannels)
+createFeederNode(context, nChannels, options)
 	.then((feederNode) => {
 		feederNode.connect(context.destination);
 		feederNode.feed(new Float32Array(512));
@@ -44,13 +45,14 @@ createFeederNode(context, nChannels)
 ```
 or
 ```javascript
-const FeederNode = require('@alexanderolsen/feeder-node'); 
+const createFeederNode = require('@alexanderolsen/feeder-node').createfeederNode; 
 
 (async function() {
 	let context   = new AudioContext();
 	let nChannels = 2;
+	let options = {}; // see **Configuration**
 
-	let feederNode = await FeederNode.create(context, nChannels);
+	let feederNode = await createFeederNode(context, nChannels, options);
 	feederNode.connect(context.destination);
 	feederNode.feed(new Float32Array(512));
 })();
@@ -62,8 +64,9 @@ const FeederNode = require('@alexanderolsen/feeder-node');
 <script>
 	var context   = new AudioContext();
 	var nChannels = 2;
+	var options = {}; // see **Configuration**
 
-	FeederNode.create(context, nChannels)
+	FeederNode.createFeederNode(context, nChannels, options)
 		.then((feederNode) => {
 			feederNode.connect(context.destination);
 			feederNode.feed(new Float32Array(512));
@@ -76,9 +79,54 @@ Or use the feeder-node.js file in the *dist* folder:
 <script src="feeder-node.js"></script>
 ```
 
+## Configuration
+
+When creating a FeederNode instance, you have number of options available:
+
+```javascript
+let context   = new AudioContext();
+let nChannels = 2;
+let options = {
+	batchSize:           // { Number } default 512 || 128. Stuck at 128 for `AudioWorklet`s
+	bufferThreshold:     // { Number } default 4096. Number of samples to buffer before propagating to dstination
+	bufferLength:        // { Number } default 192000. Length of RingBuffer. See ring-buffer.js for more
+	resampConverterType: // { Number } default 2. See **resampConverterType**
+	inputSampleRate:     // { Number } default context.sampleRate
+	pathToWorklet:       // { String } default '/feeder-node.processor.js'. See README for more
+	pathToWorker:        // { String } default '/feeder-node.worker.js'. See README for more
+	pathToWasm:          // { String } default '/feeder-node.wasm.js'. See README for more
+}
+
+createFeederNode(context, nChannels, options).then((feederNode) => { ... });
+```
+
+#### `batchSize`
+Modifies the batch size processed by `ScriptProcessorNode`. This does not affect `AudioWorklet`s as they're stuck at 128.
+
+#### `bufferThreshold`
+FeederNode buffers this many samples (per channel) before propagating to the next `AudioNode` in the graph. Higher values (16000-32000) can be useful to guarantee seamless audio if playing back in real-time, though lower values result in lower latency.
+
+#### `bufferLength`
+The total amount of data which can be buffered at a time. If you try to buffer more data than this, you'll end up overwriting older data.
+
+#### `resampConverterType`
+Converter types are as follows. More information can be found at the [libsamplerate website](http://www.mega-nerd.com/SRC/api_misc.html#Converters).
+```javascript
+const ConverterType = {
+	SRC_SINC_BEST_QUALITY: 0,   // highest quality, slowest
+	SRC_SINC_MEDIUM_QUALITY: 1, // 
+	SRC_SINC_FASTEST: 2,        // in-between
+	SRC_ZERO_ORDER_HOLD: 3,     // poor quality, "blindingly" fast
+	SRC_LINEAR: 4               // poor quality, "blindingly" fast
+}
+```
+
+#### `inputSampleRate`
+Sample rate of incoming data. Will automatically be resampled to AudioContext.sampleRate.
+
 ## API Reference
 
-Information on creating a FeederNode instance is located in **Configuration**. Once you've created the FeederNode using `createFeederNode()` or `FeederNode.create()`, the returned object exposes:
+Once you've created the FeederNode using `createFeederNode()` or `FeederNode.createFeederNode()`, the returned object exposes:
 ### `connect`
 ```javascript
 /**
@@ -111,6 +159,8 @@ feed(data) { ... }
 get bufferLength() { ... }
 get nChannels() { ... }
 get batchSize() { ... }
+
+// e.g. let bufferLength = feederNode.bufferlength;
 ```
 
 ### `overrides`
@@ -125,51 +175,6 @@ onBackendStarved() {}
 
 // e.g. feederNode.onBackendStarved = () => { console.log('feederNode ran out of data!' ) }
 ```
-
-## Configuration
-
-When creating a FeederNode instance, you have number of options available:
-
-```javascript
-let context   = new AudioContext();
-let nChannels = 2;
-let options = {
-	batchSize:           { Number } default 512. Stuck at 128 for `AudioWorklet`s
-	bufferThreshold:     { Number } default 4096. Number of samples to buffer before propagating to dstination
-	bufferLength:        { Number } default 192000. Length of RingBuffer. See ring-buffer.js for more
-	resampConverterType: { Number } default See http://www.mega-nerd.com/SRC/api_misc.html#Converters
-	inputSampleRate:     { Number } default context.sampleRate
-	pathToWorklet:       { String } default '/feeder-node.processor.js'. See README for more
-	pathToWorker:        { String } default '/feeder-node.worker.js'. See README for more
-	pathToWasm:          { String } default '/feeder-node.wasm.js'. See README for more
-}
-
-createFeederNode(context, nChannels, options).then((feederNode) => { ... });
-```
-
-#### `batchSize`
-Modifies the batch size processed by `ScriptProcessorNode`. This does not affect `AudioWorklet`s as they're stuck at 128.
-
-#### `bufferThreshold`
-FeederNode buffers this many samples (per channel) before propagating to the next `AudioNode` in the graph. Higher values (16000-32000) can be useful to guarantee seamless audio if playing back in real-time, though lower values result in lower latency.
-
-#### `bufferLength`
-The total amount of data which can be buffered at a time. If you try to buffer more data than this, you'll end up overwriting older data.
-
-#### `resampConverterType`
-Converter types are as follows. More information can be found at the [libsamplerate website](http://www.mega-nerd.com/SRC/api_misc.html#Converters).
-```javascript
-const ConverterType = {
-	SRC_SINC_BEST_QUALITY: 0,   // highest quality, slowest
-	SRC_SINC_MEDIUM_QUALITY: 1, // 
-	SRC_SINC_FASTEST: 2,        // in-between
-	SRC_ZERO_ORDER_HOLD: 3,     // poor quality, "blindingly" fast
-	SRC_LINEAR: 4               // poor quality, "blindingly" fast
-}
-```
-
-#### `inputSampleRate`
-Sample rate of incoming data. Will automatically be resampled to AudioContext.sampleRate.
 
 ## Examples
 
@@ -189,6 +194,9 @@ npm run watch
 ```
 
 Production files are placed in the *dist* directory.
+
+## Uncaught (in promise) DOMException: The user aborted a request.
+This super unhelpful error message occurs when FeederNode is unable to find your feeder-node.worklet.js. To fix this, make sure your `options.pathToWorklet` is set correctly and that the file is actually reachable at that location.
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.

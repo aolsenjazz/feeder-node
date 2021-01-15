@@ -31,7 +31,7 @@ const VALID_BATCH_SIZES = [128, 256, 512, 1024, 2048, 4096, 8192, 16384];
  * @param  { Object }       options   See above
  * @return { Promise }                Promise which resolves with a FeederNode instance or rejects with error message.
  */
-export default async function create(context, nChannels, options={}) {
+export async function createFeederNode(context, nChannels, options={}) {
 	let batchSize        = options.batchSize || (window.AudioWorklet !== undefined ? 128 : 512);
 	let bufferThreshold  = options.bufferThreshold || 4096;
 	let bufferLength     = options.bufferLength || 192000;

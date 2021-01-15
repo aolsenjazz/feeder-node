@@ -8,7 +8,7 @@ In practice, one should use an AudioBufferSourceNode for this; this is just an e
 -->
 <html>
 	<input type="file" accept="audio" id="input"/>
-	<button id="play">Feed 1 second of audio</button>
+	<button id="play">Start</button>
 
 	<script src="https://cdn.jsdelivr.net/npm/wavefile"></script>
 	<script src="/dist/feeder-node.js"></script>
@@ -47,7 +47,7 @@ In practice, one should use an AudioBufferSourceNode for this; this is just an e
 			var AudioCtx = window.AudioContext || window.webkitAudioContext;
 			context = new AudioCtx({sampleRate: 48000});
 
-			feederNode = await FeederNode(context, nChannels, { 
+			feederNode = await FeederNode.createFeederNode(context, nChannels, { 
 				inputSampleRate: sampleRate,
 				bufferThreshold: 8192,
 				pathToWasm: '/dist/libsamplerate.wasm',
