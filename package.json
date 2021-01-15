@@ -15,6 +15,9 @@
   ],
   "main": "./dist/feeder-node.js",
   "scripts": {
+    "build": "npx webpack",
+    "test": "jest --coverage",
+    "test:coverage": "node ./node_modules/coveralls/bin/coveralls.js < coverage/lcov.info",
     "watch": "npx webpack --watch",
     "watch-chunk-feeder": "nodemon --watch examples/chunk-feeder/src --exec \"cd examples/chunk-feeder; npx webpack --config webpack.config.js\""
   },
@@ -55,6 +58,7 @@
     "babel-plugin-transform-class-properties": "^6.24.1",
     "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.7.0",
+    "coveralls": "^3.1.0",
     "jest": "^26.6.3",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
