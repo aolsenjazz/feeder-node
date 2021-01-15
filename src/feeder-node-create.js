@@ -39,7 +39,7 @@ export async function createFeederNode(context, nChannels, options={}) {
 	let inputSampleRate  = options.inputSampleRate || context.sampleRate;
 	let outputSampleRate = context.sampleRate;
 
-	let pathToWorklet = options.pathToWorklet || '/feeder-node.processor.js';
+	let pathToWorklet = options.pathToWorklet || '/feeder-node.worklet.js';
 	let pathToWorker  = options.pathToWorker  || '/feeder-node.worker.js';
 	let pathToWasm    = options.pathToWasm    || '/libsamplerate.wasm';
 
