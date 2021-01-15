@@ -28,7 +28,7 @@ export default class WorkletProcessor extends AudioWorkletProcessor {
 		this._updateState();
 
 		if (this.state === BackendState.PLAYING) {
-			this._buffer.readInto(outputs[0], BATCH_SIZE);
+			this._buffer.read(BATCH_SIZE, outputs[0]);
 		} else {
 			writeSilence(outputs[0]);
 		}
@@ -96,7 +96,7 @@ export default class WorkletProcessor extends AudioWorkletProcessor {
 	 * @param {Float32Array} float32Array interleaved (if channels > 0) audio data
 	 */
 	_feed(float32Array) {
-		let [didResize, bufferLength] = this._buffer.write(float32Array, this.nChannels > 1);
+		let [didResize, bufferLength] = this._buffer.write(float32Array);
 
 		if (didResize) {
 			this.port.postMessage({command: 'bufferLengthChange', bufferLength: bufferLength});

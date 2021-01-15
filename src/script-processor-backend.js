@@ -93,7 +93,7 @@ export default class ScriptProcessorBackend extends AbstractBackend {
 		let outs = Array.apply(null, Array(this.nChannels)).map((x, i) => { return audioProcessingEvent.outputBuffer.getChannelData(i) });
 
 		if (this.state === BackendState.PLAYING) {
-			this._buffer.readInto(outs, this.batchSize);
+			this._buffer.read(this.batchSize, outs);
 		} else {
 			writeSilence(outs);
 		}

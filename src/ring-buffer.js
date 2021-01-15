@@ -1,64 +1,45 @@
-// TODO: This should support more than 2 channels. no reason not to
 class RingBuffer {
-	
-	_bufferLength;
-	_nChannels;
-	_data = [];
-	_writePos = 0;
-	_readPos = 0;
 
+	/**
+	 * Constructor
+	 * 
+	 * @param { Number } bufferLength Array length (per channel). Extended if a large chunk is submitted to eed()
+	 * @param { Number } nChannels    The number of channels. 0 < nChannel < "infinity"
+	 */
 	constructor(bufferLength=32768, nChannels=2) {
 		if (bufferLength <= 0) throw 'bufferLength must be >= 1';
-		if (!(0 < nChannels) || !(nChannels <= 2)) throw 'nChannels must be 0 < nChannels <=2';
+		if (nChannels < 1) throw 'nChannels must >= 1';
 
-		for (let i = 0; i < nChannels; i++) {
-			this._data.push(new Float32Array(bufferLength));
-		}
+		this._data = new Float32Array(bufferLength * nChannels);
 
-		this.bufferLength = bufferLength;
 		this._nChannels = nChannels;
+		this._readPos = 0;
+		this._writePos = 0;
 	}
 
-	/**
-	 * Returns whether or not there's any data available to be read
-	 *
-	 * @return {boolean} is there any available data?
-	 */
-	hasDataAvailable() {
-		return this._writePos != this._readPos;
-	}
-
-	/**
-	 * Resets the read position, sucj that hasAvailableData() === false
-	 */
-	resetReadPosition() {
-		this._readPos = this._writePos;
+	get bufferLength() {
+		return this._data.length / this._nChannels;
 	}
 
 	/**
 	 * Returns the number of samples available. This number is per channel, not summed over the channels
 	 *
-	 * @return {Number} the number of samples to be read
+	 * @return { Number } The number of available samples per channel
 	 */
 	getNReadableSamples() {
 		if (this._readPos == this._writePos) return 0;
-		return (this._readPos < this._writePos) ? this._writePos - this._readPos : this.bufferLength - this._readPos + this._writePos;
-	}
 
-	/**
-	 * Increases the read position by nSamples, effectively trimming nReadableSamples by nSamples
-	 *
-	 * @param {Number} nSamples The number of samples to advance the read position
-	 */
-	advanceReadPosition(nSamples) {
-		let newPos = this._readPos;
-		for (let i = 0; i < nSamples; i++) {
-			if (newPos == this.bufferLength) newPos = 0;
-			newPos++;
-			if (newPos == this._writePos) break;
+		let nInterleavedReadable;
+		if (this._readPos < this._writePos) {
+			// Read position is lower
+			nInterleavedReadable = this._writePos - this._readPos;
+		} else {
+			// Read position is higher; writePos must have wrapped around
+			nInterleavedReadable = this._data.length - this._readPos + this._writePos;
 		}
 
-		this._readPos = newPos;
+		// divide by the number of channels
+		return nInterleavedReadable / this._nChannels;
 	}
 
 	/**
@@ -67,137 +48,74 @@ class RingBuffer {
 	 * @param  {Number} nSamples The number of samples (per channel) to read
 	 * @return {Array}           An mxn array of m Float32Arrays with length n
 	 */
-	read(nSamples) {
-		let channels = Array.apply(null, Array(this._nChannels)).map((x, i) => {return new Float32Array(nSamples)});
+	read(nSamples, channels=null) {
+		let _channels = channels === null 
+			? Array.apply(null, Array(this._nChannels)).map((x, i) => {return new Float32Array(nSamples)}) 
+			: channels;
+
 		let readableSamples = Math.min(nSamples, this.getNReadableSamples());
-		let readChannelPos;
+		let readPos = this._readPos;
 
-		for (let channelNum = 0; channelNum < channels.length; channelNum++) {
-			let writeChannel = channels[channelNum];
-			readChannelPos = this._readPos;
+		for (let i = 0; i < readableSamples; i++) {
+			for (let j = 0; j < _channels.length; j++) {
+				if (readPos === this._data.length) readPos = 0;
 
-			for (let samplePos = 0; samplePos < readableSamples; samplePos++) {
-				if (readChannelPos == this.bufferLength) readChannelPos = 0;
-
-				writeChannel[samplePos] = this._data[channelNum][readChannelPos++];
+				_channels[j][i] = this._data[readPos++];
 			}
 		}
 
-		this._readPos = readChannelPos;
-		return channels;
+		this._readPos = readPos;
+
+		return _channels;
 	}
 
 	/**
-	 * Reads the specified number of samples (nSamples) into a Float32Array. Useful if one
-	 * wants to resuse buffers between reads.
-	 *
-	 * @param {Array}  channels An mxn Array of Float32Arrays with length n
-	 * @param {Number} nSamples The number of samples (per channel) to read into the given arrays
+	 * Resize the _data to accomodate for large chunks. Resizing will only happen if the number of
+	 * samples fed is > this.bufferLength.
+	 * 
+	 * @param { Number } nInterleavedSamples The size of the chunk
 	 */
-	readInto(channels, nSamples) {
-		let readableSamples = Math.min(nSamples, this.getNReadableSamples());
-		let readChannelPos;
+	_resize(nInterleavedSamples) {
+		let nReadableInterleavedSamples = this.getNReadableSamples() * this._nChannels;
+		let newLength = nInterleavedSamples + nReadableInterleavedSamples;
 
-		for (let channelNum = 0; channelNum < channels.length; channelNum++) {
-			readChannelPos = this._readPos;
-
-			for (let samplePos = 0; samplePos < readableSamples; samplePos++) {
-				if (readChannelPos == this.bufferLength) readChannelPos = 0;
-
-				channels[channelNum][samplePos] = this._data[channelNum][readChannelPos++];
-			}
-		}
+		let newArray = new Float32Array(newLength);
 		
-		this._readPos = readChannelPos;
-	}
-
-	/**
-	 * Resizes the Float32Arrays in this._data. This will probably called when trying to put
-	 * large chunks into the RingBuffer.
-	 *
-	 * @param {Number} newSize The new size, should be > this._data[0].length
-	 */
-	_resize(newSize) {
-		let newChannels = [];
-		let readableSamples = this.getNReadableSamples();
-		for (let i = 0; i < this._nChannels; i++) {
-			newChannels.push(new Float32Array(newSize));
+		let readPos = this._readPos;
+		for (let i = 0; i < nReadableInterleavedSamples; i++) {
+			newArray[i] = this._data[readPos++];
 		}
-
-		this.readInto(newChannels, readableSamples);
 	
-		this._writePos = readableSamples;
+		this._writePos = nReadableInterleavedSamples;
 		this._readPos = 0;
-		this._data = newChannels;
-		this.bufferLength = newChannels[0].length;
+		this._data = newArray;
 	}
 
 	/**
-	 * Writes the provided data to this._data. readChannels can be an Array of Float32Arrays or just
-	 * a single Float32Array. If this.nChannels > 1, it will be assumed that any submission of a single
-	 * Float32Array is interleaved.
+	 * Writes data to the buffer, expanding the buffer if need be.
 	 *
-	 * @param {Array || Float32Array} readChannels Float32Array of mono/interleaved data, or Array of Float32Arrays
+	 * @param  { Float32Array } float32Data Mono or multi-channel interleaved data
+	 * @return { Array }        Array containing [didResize, bufferLength]
 	 */
-	write(readChannels) {
-		let interleaved = false;
+	write(float32Data) {
+		if (!ArrayBuffer.isView(float32Data)) throw `Must submit a TypedArray. Received ${float32Data.constructor.name}`;
 		let didResize = false;
-		let _readChannels;
-		if (ArrayBuffer.isView(readChannels) && this._nChannels === 1) {
-			// prepare for reading mono data
-			_readChannels = [readChannels];
-		} else if (ArrayBuffer.isView(readChannels)) {
-			// one channel submitted & not in mono. assume interleaved.
-			_readChannels = [readChannels];
-			interleaved = true;
-		} else {
-			// received an array of Float32Arrays, validate as such
-			if (readChannels.length != this._nChannels) throw 'readChannels.length must equal this._nChannels!';
-			let channelLen = readChannels[0].length;
-			for (let i = 0; i < readChannels.length; i++) 
-				if (readChannels[i].length != channelLen) throw 'channel lengths differ in write()';
-			_readChannels = readChannels;
-		}
 
-		// resize the RingBuffer if necessary
-		let lengthPerChannel = interleaved ? _readChannels[0].length / this._data.length : _readChannels[0].length;
-		if (lengthPerChannel > this.bufferLength) {
-			this._resize(_readChannels[0].length + this.getNReadableSamples());
+		// if submitted array is longer than internal buffer, resize interal array.
+		if (float32Data.length > this._data.length) {
+			this._resize(float32Data.length);
 			didResize = true;
 		}
 
-		// copy [readChannels] into this._data
-		let newWritePos;
-		for (let channelNum = 0; channelNum < _readChannels.length; channelNum++) {
-			let chan = _readChannels[channelNum];
-			newWritePos = this._writePos;
+		let writePos = this._writePos;
+		for (let i = 0; i < float32Data.length; i++) {
+			if (writePos === this._data.length) writePos = 0;
 
-			if (interleaved === true) {
-				// if interleaved, copy each value in chan to each array in this._data
-				for (let i = 0; i < chan.length; i += this._data.length) {
-					if (newWritePos == this.bufferLength) newWritePos = 0;
-
-					for (let j = 0; j < this._data.length; j++) {
-						this._data[j][newWritePos] = chan[i + j];
-					}
-
-					newWritePos++;
-				}
-
-			} else {
-				// non interleaved, copy every in channels [readChannels] to this.data. simple
-				for (let samplePos = 0; samplePos < chan.length; samplePos++) {
-					if (newWritePos == this.bufferLength) newWritePos = 0;
-
-					this._data[channelNum][newWritePos++] = chan[samplePos];
-				}
-			}
+			this._data[writePos++] = float32Data[i];
 		}
+		this._writePos = writePos;
 
-		// update write position
-		this._writePos = newWritePos;
-
-		return [didResize, this.bufferLength];
+		return [didResize, this._data.length / this._nChannels];
 	}
 }
 

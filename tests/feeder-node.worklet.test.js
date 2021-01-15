@@ -66,7 +66,7 @@ test('feed() feeds data correctly', () => {
 		}
 	});
 
-	expect(JSON.stringify(wp._buffer._data[0])).toBe(JSON.stringify(new Float32Array([1,2,3,4])));
+	expect(JSON.stringify(wp._buffer._data)).toBe(JSON.stringify(new Float32Array([1,2,3,4])));
 });
 
 test('process with empty buffer fills with silence', () => {
