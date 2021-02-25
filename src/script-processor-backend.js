@@ -18,12 +18,12 @@ export default class ScriptProcessorBackend extends AbstractBackend {
 	 */
 	constructor(context, nChannels, batchSize, bufferLength, bufferThreshold) {
 		super();
-
+		
 		this.batchSize = batchSize;
 		this.nChannels = nChannels;
 		this.bufferThreshold = bufferThreshold;
-		this._processor = context.createScriptProcessor(batchSize, 0, nChannels);
-		this._processor.onaudioprocess = this._playNext.bind(this);
+		this.audioNode = context.createScriptProcessor(batchSize, 0, nChannels);
+		this.audioNode.onaudioprocess = this._playNext.bind(this);
 
 		this._buffer = new RingBuffer(bufferLength, nChannels);
 		this.state = BackendState.READY;
@@ -48,14 +48,14 @@ export default class ScriptProcessorBackend extends AbstractBackend {
 	 * @param {AudioNode} destination The node to which FeederNode will connect
 	 */
 	connect(destination) {
-		this._processor.connect(destination);
+		this.audioNode.connect(destination);
 	}
 
 	/**
 	 * Disconnect from the connected AudioNode
 	 */
 	disconnect() {
-		this._processor.disconnect();
+		this.audioNode.disconnect();
 	}
 
 	/**

@@ -167,7 +167,22 @@ get bufferLength() { ... }
 get nChannels() { ... }
 get batchSize() { ... }
 
+get numberOfInputs() { ... }
+get numberOfOutputs() { ... }
+get channelCount() { ... }
+get channelCountMode() { ... }
+get channelInterpretation() { ... }
+
 // e.g. let bufferLength = feederNode.bufferlength;
+```
+
+### `setters`
+```javascript
+set channelCount(channelCount) { ... }
+set channelCountMode(channelCountMode) { ... }
+set channelInterpretation(channelInterpretation) { ... }
+
+// e.g. silenceListenerNode.channelInterpretation = 'speakers';
 ```
 
 ### `overrides`

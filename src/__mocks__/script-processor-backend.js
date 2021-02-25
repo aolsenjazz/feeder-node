@@ -9,6 +9,7 @@ export default class ScriptProcessorBackend extends AbstractBackend {
 		this.batchSize = batchSize;
 		this.bufferLength = bufferLength;
 		this.bufferThreshold = bufferThreshold;
+		this.audioNode = context.createScriptProcessor(batchSize, 0, nChannels);
 	}
 
 	feed(float32Array) {

@@ -58,7 +58,7 @@ let workerConfig = Object.assign({}, commonConfig, {
 });
 
 let moduleConfig = Object.assign({}, commonConfig, {
-	entry: './src/feeder-node-create.js',
+	entry: './src/index.js',
 	output: {
 		filename: 'feeder-node.js',
 		path: path.resolve(__dirname, 'dist'),

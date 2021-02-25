@@ -221,7 +221,7 @@ test('calling _updateState with PLAYING state and enough samples doesnt change s
 	expect(notified).toBe(false);
 });
 
-test('connect() call _processor.connect()', () => {
+test('connect() call audioNode.connect()', () => {
 	let con = new AudioContext();
 	let nChannels = 2;
 	let batchSize = 512;
@@ -229,16 +229,16 @@ test('connect() call _processor.connect()', () => {
 	let bufferThreshold = 4096;
 
 	let spr = new ScriptProcessorBackend(con, nChannels, batchSize, bufferLength, bufferThreshold);
-	spr._processor.connect = jest.fn();
+	spr.audioNode.connect = jest.fn();
 
-	let spy = jest.spyOn(spr._processor, 'connect');
+	let spy = jest.spyOn(spr.audioNode, 'connect');
 
 	spr.connect('something');
 
 	expect(spy).toHaveBeenCalledTimes(1);
 });
 
-test('disconnect() call _processor.disconnect()', () => {
+test('disconnect() call audioNode.disconnect()', () => {
 	let con = new AudioContext();
 	let nChannels = 2;
 	let batchSize = 512;
@@ -246,9 +246,9 @@ test('disconnect() call _processor.disconnect()', () => {
 	let bufferThreshold = 4096;
 
 	let spr = new ScriptProcessorBackend(con, nChannels, batchSize, bufferLength, bufferThreshold);
-	spr._processor.disconnect = jest.fn();
+	spr.audioNode.disconnect = jest.fn();
 
-	let spy = jest.spyOn(spr._processor, 'disconnect');
+	let spy = jest.spyOn(spr.audioNode, 'disconnect');
 
 	spr.disconnect('something');
 

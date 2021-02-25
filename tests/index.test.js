@@ -1,7 +1,7 @@
 import 'web-audio-test-api';
 import 'babel-polyfill';
 
-import { createFeederNode } from '../src/feeder-node-create.js';
+import { createFeederNode } from '../src/index.js';
 
 class MessageChannelMock {
 

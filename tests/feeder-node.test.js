@@ -15,6 +15,12 @@ class MessageChannelMock {
 global.MessageChannel = MessageChannelMock;
 
 test('creating with WorkletBackend and WorkerProcessor creates a messagechannel', async () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
 	let resampler = await createWorkerResampler();
 	let backend = await createAudioWorklet();
 
@@ -26,6 +32,12 @@ test('creating with WorkletBackend and WorkerProcessor creates a messagechannel'
 });
 
 test('creating with WorkletBackend & MainThreadResampler doesnt create a messagechannel', async () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
 	let resampler = new MainThreadResampler();
 	let backend = await createAudioWorklet();
 
@@ -37,8 +49,14 @@ test('creating with WorkletBackend & MainThreadResampler doesnt create a message
 });
 
 test('creating with WorkerResampler & ScriptProcessorBackend doesnt create a messagechannel', async () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
 	let resampler = await createWorkerResampler();
-	let backend = new ScriptProcessorBackend();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
 
 	let spy = jest.spyOn(resampler, 'setPort');
 
@@ -48,8 +66,14 @@ test('creating with WorkerResampler & ScriptProcessorBackend doesnt create a mes
 });
 
 test('creating with MainThreadResampler and ScriptProcessorBackend doesnt create a messagechannel', () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
 	let resampler = new MainThreadResampler();
-	let backend = new ScriptProcessorBackend();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
 
 	let spy = jest.spyOn(resampler, 'setPort');
 
@@ -59,8 +83,14 @@ test('creating with MainThreadResampler and ScriptProcessorBackend doesnt create
 });
 
 test('bufferLength returns the backends bufferLength', () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
 	let resampler = new MainThreadResampler();
-	let backend = new ScriptProcessorBackend();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
 
 	let feederNode = new FeederNode(resampler, backend);
 
@@ -70,8 +100,14 @@ test('bufferLength returns the backends bufferLength', () => {
 });
 
 test('nChannels returns the backends nChannels', () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
 	let resampler = new MainThreadResampler();
-	let backend = new ScriptProcessorBackend();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
 
 	let feederNode = new FeederNode(resampler, backend);
 
@@ -81,8 +117,14 @@ test('nChannels returns the backends nChannels', () => {
 });
 
 test('batchSize returns the backends batchSize', () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
 	let resampler = new MainThreadResampler();
-	let backend = new ScriptProcessorBackend();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
 
 	let feederNode = new FeederNode(resampler, backend);
 
@@ -92,8 +134,14 @@ test('batchSize returns the backends batchSize', () => {
 });
 
 test('connect() calls _backend.connect()', () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
 	let resampler = new MainThreadResampler();
-	let backend = new ScriptProcessorBackend();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
 
 	let feederNode = new FeederNode(resampler, backend);
 
@@ -105,8 +153,14 @@ test('connect() calls _backend.connect()', () => {
 });
 
 test('disconnect() calls _backend.disconnect()', () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
 	let resampler = new MainThreadResampler();
-	let backend = new ScriptProcessorBackend();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
 
 	let feederNode = new FeederNode(resampler, backend);
 
@@ -118,8 +172,14 @@ test('disconnect() calls _backend.disconnect()', () => {
 });
 
 test('feed() with non-typed-array throws', () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
 	let resampler = new MainThreadResampler();
-	let backend = new ScriptProcessorBackend();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
 
 	let feederNode = new FeederNode(resampler, backend);
 
@@ -129,8 +189,14 @@ test('feed() with non-typed-array throws', () => {
 });
 
 test('feed() with typed-array calls _resampler.processBatch', () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
 	let resampler = new MainThreadResampler();
-	let backend = new ScriptProcessorBackend();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
 
 	let feederNode = new FeederNode(resampler, backend);
 
@@ -142,8 +208,14 @@ test('feed() with typed-array calls _resampler.processBatch', () => {
 });
 
 test('_resampleComplete() passes data to _backend.feed', (done) => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
 	let resampler = new MainThreadResampler();
-	let backend = new ScriptProcessorBackend();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
 
 	let feederNode = new FeederNode(resampler, backend);
 	let data = new Float32Array([1,2,3,4]);
@@ -157,8 +229,14 @@ test('_resampleComplete() passes data to _backend.feed', (done) => {
 });
 
 test('_onBackendStateChange(BackendState.READY) calls onBackendReady()', () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
 	let resampler = new MainThreadResampler();
-	let backend = new ScriptProcessorBackend();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
 
 	let feederNode = new FeederNode(resampler, backend);
 
@@ -170,8 +248,14 @@ test('_onBackendStateChange(BackendState.READY) calls onBackendReady()', () => {
 });
 
 test('_onBackendStateChange(BackendState.STARVED) calls onBackendStarved()', () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
 	let resampler = new MainThreadResampler();
-	let backend = new ScriptProcessorBackend();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
 
 	let feederNode = new FeederNode(resampler, backend);
 
@@ -183,8 +267,14 @@ test('_onBackendStateChange(BackendState.STARVED) calls onBackendStarved()', () 
 });
 
 test('_onBackendStateChange(BackendState.PLAYING) calls onBackendPlaying()', () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
 	let resampler = new MainThreadResampler();
-	let backend = new ScriptProcessorBackend();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
 
 	let feederNode = new FeederNode(resampler, backend);
 
@@ -196,12 +286,144 @@ test('_onBackendStateChange(BackendState.PLAYING) calls onBackendPlaying()', () 
 });
 
 test('_onBackendStateChange(100) throws', () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
 	let resampler = new MainThreadResampler();
-	let backend = new ScriptProcessorBackend();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
 
 	let feederNode = new FeederNode(resampler, backend);
 
 	expect(() => {
 		feederNode._onBackendStateChange(100);
 	}).toThrow('unknown state 100');
+});
+
+test('get numberOfInputs defers to backend', async () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
+	let resampler = new MainThreadResampler();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
+
+	let feederNode = new FeederNode(resampler, backend);
+
+	expect(feederNode.numberOfInputs).toBe(feederNode._backend.audioNode.numberOfInputs);
+});
+
+test('get numberOfOutputs defers to backend', async () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
+	let resampler = new MainThreadResampler();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
+
+	let feederNode = new FeederNode(resampler, backend);
+
+	expect(feederNode.numberOfOutputs).toBe(feederNode._backend.audioNode.numberOfOutputs);
+});
+
+test('get channelCount defers to backend', async () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
+	let resampler = new MainThreadResampler();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
+
+	let feederNode = new FeederNode(resampler, backend);
+
+	expect(feederNode.channelCount).toBe(feederNode._backend.audioNode.channelCount);
+});
+
+test('get channelCountMode defers to backend', async () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
+	let resampler = new MainThreadResampler();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
+
+	let feederNode = new FeederNode(resampler, backend);
+
+	expect(feederNode.channelCountMode).toBe(feederNode._backend.audioNode.channelCountMode);
+});
+
+test('get channelInterpretation defers to backend', async () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
+	let resampler = new MainThreadResampler();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
+
+	let feederNode = new FeederNode(resampler, backend);
+
+	expect(feederNode.channelInterpretation).toBe(feederNode._backend.audioNode.channelInterpretation);
+});
+
+test('set channelCount sets backend channelCount', async () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
+	let resampler = new MainThreadResampler();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
+
+	let feederNode = new FeederNode(resampler, backend);
+
+	feederNode.channelCount = 420;
+
+	expect(feederNode._backend.audioNode.channelCount).toBe(420);
+});
+
+test('set channelCountMode sets backend channelCountMode', async () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
+	let resampler = new MainThreadResampler();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
+
+	let feederNode = new FeederNode(resampler, backend);
+
+	feederNode.channelCountMode = 'max';
+
+	expect(feederNode._backend.audioNode.channelCountMode).toBe('max');
+});
+
+test('set channelInterpretation sets backend channelInterpretation', async () => {
+	let ctx = new AudioContext();
+	let nChannels = 2;
+	let batchSize = 512;
+	let bufferLength = 192000;
+	let bufferThreshold = 16384;
+
+	let resampler = new MainThreadResampler();
+	let backend = new ScriptProcessorBackend(ctx, nChannels, batchSize, bufferLength, bufferThreshold);
+
+	let feederNode = new FeederNode(resampler, backend);
+
+	feederNode.channelInterpretation = 'discrete';
+
+	expect(feederNode._backend.audioNode.channelInterpretation).toBe('discrete');
 });

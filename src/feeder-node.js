@@ -30,6 +30,18 @@ export default class FeederNode {
 	get nChannels() { return this._backend.nChannels; }
 	get batchSize() { return this._backend.batchSize; }
 
+	/** AudioNode-compliant getters. All defer to underlying AudioNode */
+	get numberOfInputs()        { return this._backend.audioNode.numberOfInputs; }
+	get numberOfOutputs()       { return this._backend.audioNode.numberOfOutputs; }
+	get channelCount()          { return this._backend.audioNode.channelCount; }
+	get channelCountMode()      { return this._backend.audioNode.channelCountMode; }
+	get channelInterpretation() { return this._backend.audioNode.channelInterpretation; }
+
+	/** AudioNode-compliant setters. All defer to underlying AudioNode */
+	set channelCount(channelCount)                   { this._backend.audioNode.channelCount = channelCount; }
+	set channelCountMode(channelCountMode)           { this._backend.audioNode.channelCountMode = channelCountMode; }
+	set channelInterpretation(channelInterpretation) { this._backend.audioNode.channelInterpretation = channelInterpretation }
+
 	/**
 	 * Connects FeederNode to the specific destination AudioNode
 	 *
