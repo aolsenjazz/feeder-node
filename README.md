@@ -21,9 +21,9 @@ To utilize Web Worker, WebAssembly, and AudioWorklet functionality, you **must**
 
 ```javascript
 createFeederNode(context, nChannels, { 
-	pathToWasm:    '/some/path/to/libsamplerate.wasm',     // default '/libsamplerate.wasm'
-	pathToWorklet: '/some/path/to/feeder-node.worklet.js', // default '/feeder-node.worklet.js'
-	pathToWorker:  '/some/path/to/feeder-node.worker.js'   // default '/feeder-node.worker.js'
+    pathToWasm:    '/some/path/to/libsamplerate.wasm',     // default '/libsamplerate.wasm'
+    pathToWorklet: '/some/path/to/feeder-node.worklet.js', // default '/feeder-node.worklet.js'
+    pathToWorker:  '/some/path/to/feeder-node.worker.js'   // default '/feeder-node.worker.js'
 });
 ```
 See **Configuration** for more instructions on using the `options` dict.
@@ -41,23 +41,23 @@ let nChannels = 2;
 let options = {}; // see **Configuration**
 
 createFeederNode(context, nChannels, options)
-	.then((feederNode) => {
-		feederNode.connect(context.destination);
-		feederNode.feed(new Float32Array(512));
-	});
+    .then((feederNode) => {
+        feederNode.connect(context.destination);
+        feederNode.feed(new Float32Array(512));
+    });
 ```
 or
 ```javascript
 const createFeederNode = require('@alexanderolsen/feeder-node').createfeederNode; 
 
 (async function() {
-	let context   = new AudioContext();
-	let nChannels = 2;
-	let options = {}; // see **Configuration**
+    let context   = new AudioContext();
+    let nChannels = 2;
+    let options = {}; // see **Configuration**
 
-	let feederNode = await createFeederNode(context, nChannels, options);
-	feederNode.connect(context.destination);
-	feederNode.feed(new Float32Array(512));
+    let feederNode = await createFeederNode(context, nChannels, options);
+    feederNode.connect(context.destination);
+    feederNode.feed(new Float32Array(512));
 })();
 ```
 
@@ -65,16 +65,16 @@ const createFeederNode = require('@alexanderolsen/feeder-node').createfeederNode
 ```html
 <script src="https://cdn.jsdelivr.net/npm/@alexanderolsen/feeder-node"></script>
 <script>
-	var context   = new AudioContext();
-	var nChannels = 2;
-	var options = {}; // see **Configuration**
+    var context   = new AudioContext();
+    var nChannels = 2;
+    var options = {}; // see **Configuration**
 
-	FeederNode.createFeederNode(context, nChannels, options)
-		.then((feederNode) => {
-			feederNode.connect(context.destination);
-			feederNode.feed(new Float32Array(512));
-		});
-	
+    FeederNode.createFeederNode(context, nChannels, options)
+        .then((feederNode) => {
+            feederNode.connect(context.destination);
+            feederNode.feed(new Float32Array(512));
+        });
+    
 </script>
 ```
 Or use the feeder-node.js file in the *dist* folder:
@@ -92,16 +92,16 @@ let nChannels = 2;
 
 // entries are defaults
 let options = {
-	inputSampleRate:     context.sampleRate, // Nothing surprising here
+    inputSampleRate:     context.sampleRate, // Nothing surprising here
 
-	batchSize:           (512 || 128), // Stuck at 128 for `AudioWorklet`s. 
-	bufferThreshold:     4096,         // Number of samples to buffer before propagating to dstination
-	bufferLength:        192000,       // Length of RingBuffer. See ring-buffer.js for more
-	resampConverterType: 2,            // See **resampConverterType**
+    batchSize:           (512 || 128), // Stuck at 128 for `AudioWorklet`s. 
+    bufferThreshold:     4096,         // Number of samples to buffer before propagating to dstination
+    bufferLength:        192000,       // Length of RingBuffer. See ring-buffer.js for more
+    resampConverterType: 2,            // See **resampConverterType**
 
-	pathToWorklet:       '/feeder-node.processor.js', // Set to location of your feeder-node.processor.js
-	pathToWorker:        '/feeder-node.worker.js',    // Set to location of your feeder-node.worker.js
-	pathToWasm:          '/libsamplrate.wasm.js'      // set to location of your libsamplerate.wasm
+    pathToWorklet:       '/feeder-node.processor.js', // Set to location of your feeder-node.processor.js
+    pathToWorker:        '/feeder-node.worker.js',    // Set to location of your feeder-node.worker.js
+    pathToWasm:          '/libsamplrate.wasm.js'      // set to location of your libsamplerate.wasm
 }
 
 createFeederNode(context, nChannels, options).then((feederNode) => { ... });
@@ -120,11 +120,11 @@ The total amount of data which can be buffered at a time. If you try to buffer m
 Converter types are as follows. More information can be found at the [libsamplerate website](http://www.mega-nerd.com/SRC/api_misc.html#Converters).
 ```javascript
 const ConverterType = {
-	SRC_SINC_BEST_QUALITY: 0,   // highest quality, slowest
-	SRC_SINC_MEDIUM_QUALITY: 1, // 
-	SRC_SINC_FASTEST: 2,        // in-between
-	SRC_ZERO_ORDER_HOLD: 3,     // poor quality, "blindingly" fast
-	SRC_LINEAR: 4               // poor quality, "blindingly" fast
+    SRC_SINC_BEST_QUALITY: 0,   // highest quality, slowest
+    SRC_SINC_MEDIUM_QUALITY: 1, // 
+    SRC_SINC_FASTEST: 2,        // in-between
+    SRC_ZERO_ORDER_HOLD: 3,     // poor quality, "blindingly" fast
+    SRC_LINEAR: 4               // poor quality, "blindingly" fast
 }
 ```
 
