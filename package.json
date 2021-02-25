@@ -1,6 +1,6 @@
 {
   "name": "@alexanderolsen/feeder-node",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Feed mono or stereo audio data for playback. Ideal for real-time audio.",
   "keywords": [
     "webrtc",
