@@ -1,6 +1,6 @@
 {
   "name": "@alexanderolsen/feeder-node",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Feed mono or stereo audio data for playback. Ideal for real-time audio.",
   "keywords": [
     "webrtc",
@@ -11,7 +11,10 @@
     "libsamplerate",
     "web audio",
     "audio",
-    "feeder"
+    "feeder",
+    "stream",
+    "player",
+    "feed"
   ],
   "main": "./dist/feeder-node.js",
   "scripts": {
