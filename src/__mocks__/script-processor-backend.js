@@ -1,4 +1,4 @@
-import { AbstractBackend } from '../abstract-backend.js';
+import { AbstractBackend } from "../abstract-backend.js";
 
 export default class ScriptProcessorBackend extends AbstractBackend {
 	constructor(context, nChannels, batchSize, bufferLength, bufferThreshold) {

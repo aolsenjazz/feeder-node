@@ -1,19 +1,18 @@
-import RingBuffer from './ring-buffer.js';
-import { writeSilence } from './util.js';
-import { BackendState } from './abstract-backend';
+import RingBuffer from "./ring-buffer.js";
+import { writeSilence } from "./util.js";
+import { BackendState } from "./abstract-backend";
 
 const BATCH_SIZE = 128; // non-negotiable (thanks AudioWorklet)
 
 /** AudioWorkletProcessor loaded by audio-worklet-backend to do the audio-thread processing */
 export default class WorkletProcessor extends AudioWorkletProcessor {
-	
-	nChannels;
-
+	/* eslint-disable-next-line */
 	constructor(options) {
 		super();
 		this.port.onmessage = this._onMessage.bind(this);
-		
+
 		this.bufferThreshold;
+		this.nChannels;
 		this.state = BackendState.UNINITIALIZED;
 	}
 
@@ -24,6 +23,7 @@ export default class WorkletProcessor extends AudioWorkletProcessor {
 	 * @param {Array} outputs     An array containing this.nChannels Float32Arrays
 	 * @param {Object} parameters Object containing audio parameters. unused
 	 */
+	/* eslint-disable-next-line */
 	process(inputs, outputs, parameters) {
 		this._updateState();
 
@@ -48,11 +48,13 @@ export default class WorkletProcessor extends AudioWorkletProcessor {
 			case BackendState.UNINITIALIZED:
 				return;
 			case BackendState.PLAYING:
-				if (this._buffer.getNReadableSamples() === 0) this.state = BackendState.STARVED;
+				if (this._buffer.getNReadableSamples() === 0)
+					this.state = BackendState.STARVED;
 				break;
 			case BackendState.READY:
 			case BackendState.STARVED:
-				if (this._buffer.getNReadableSamples() >= this.bufferThreshold) this.state = BackendState.PLAYING;
+				if (this._buffer.getNReadableSamples() >= this.bufferThreshold)
+					this.state = BackendState.PLAYING;
 				break;
 			default:
 		}
@@ -64,7 +66,7 @@ export default class WorkletProcessor extends AudioWorkletProcessor {
 	 * Notifies the parent FeederNode of the state change
 	 */
 	_notifyStateChange() {
-		this.port.postMessage({command: 'stateChange', state: this.state});
+		this.port.postMessage({ command: "stateChange", state: this.state });
 	}
 
 	/**
@@ -75,18 +77,22 @@ export default class WorkletProcessor extends AudioWorkletProcessor {
 	 */
 	_onMessage(e) {
 		switch (e.data.command) {
-			case 'init':
+			case "init":
 				this.nChannels = e.data.nChannels;
-				this._init(e.data.bufferLength, e.data.nChannels, e.data.bufferThreshold);
+				this._init(
+					e.data.bufferLength,
+					e.data.nChannels,
+					e.data.bufferThreshold
+				);
 				break;
-			case 'feed':
+			case "feed":
 				this._feed(e.data.data);
 				break;
-			case 'connect':
+			case "connect":
 				e.ports[0].onmessage = this._onMessage.bind(this);
 				break;
 			default:
-				throw Error('command not specified');
+				throw Error("command not specified");
 		}
 	}
 
@@ -99,7 +105,10 @@ export default class WorkletProcessor extends AudioWorkletProcessor {
 		let [didResize, bufferLength] = this._buffer.write(float32Array);
 
 		if (didResize) {
-			this.port.postMessage({command: 'bufferLengthChange', bufferLength: bufferLength});
+			this.port.postMessage({
+				command: "bufferLengthChange",
+				bufferLength: bufferLength,
+			});
 		}
 	}
 
@@ -107,7 +116,7 @@ export default class WorkletProcessor extends AudioWorkletProcessor {
 	 * Initializes with the given values. This should be called immediately after loading the processor.
 	 *
 	 * @param {Number} bufferLength    the length of the RingBuffer (this._buffer)
-	 * @param {Number} nChannels       the number of outputs channels 
+	 * @param {Number} nChannels       the number of outputs channels
 	 * @param {Number} bufferThreshold # of samples (per channel) to queue before transmission to output begins
 	 */
 	_init(bufferLength, nChannels, bufferThreshold) {
@@ -118,4 +127,4 @@ export default class WorkletProcessor extends AudioWorkletProcessor {
 	}
 }
 
-registerProcessor('FeederNode', WorkletProcessor);
+registerProcessor("FeederNode", WorkletProcessor);

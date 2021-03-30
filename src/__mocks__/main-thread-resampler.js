@@ -1,4 +1,4 @@
-import AbstractProcessor from '../abstract-processor';
+import AbstractProcessor from "../abstract-processor";
 
 export default class MainThreadResampler extends AbstractProcessor {
 	constructor(nChannels, inputSampleRate, outputSampleRate) {

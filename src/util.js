@@ -19,10 +19,12 @@ export function writeSilence(targetChannels) {
  * @return {Array}                      A multi-channel representation of the interleaved data
  */
 export function writeInterleavedToChannels(interleavedData, nChannels) {
-	if (!Number.isInteger(nChannels)) throw 'nChannels must be an integer';
+	if (!Number.isInteger(nChannels)) throw "nChannels must be an integer";
 
 	let dataPerChannel = interleavedData.length / nChannels;
-	let channels = Array.apply(null, Array(nChannels)).map((x, i) => { return new Float32Array(dataPerChannel) });
+	let channels = Array.apply(null, Array(nChannels)).map(() => {
+		return new Float32Array(dataPerChannel);
+	});
 
 	copyInterleavedToChannels(interleavedData, channels);
 	return channels;
@@ -34,11 +36,16 @@ export function writeInterleavedToChannels(interleavedData, nChannels) {
  * @param {Array}      targetChannels  An mxn array of m TypedArrays with length n. interleaved data is copied into these arrays
  */
 export function copyInterleavedToChannels(interleavedData, targetChannels) {
-	if (interleavedData.length > targetChannels[0].length * targetChannels.length) throw 'incorrect channel lengths';
+	if (interleavedData.length > targetChannels[0].length * targetChannels.length)
+		throw "incorrect channel lengths";
 
 	for (let channelNum = 0; channelNum < targetChannels.length; channelNum++) {
 		let dataPos = channelNum;
-		for (let channelPos = 0; channelPos < targetChannels[channelNum].length; channelPos++) {
+		for (
+			let channelPos = 0;
+			channelPos < targetChannels[channelNum].length;
+			channelPos++
+		) {
 			targetChannels[channelNum][channelPos] = interleavedData[dataPos];
 			dataPos += targetChannels.length;
 		}
@@ -63,11 +70,12 @@ export function writeChannelsToInterleaved(channels) {
  * @param {TypedArray} targetInterleaved A TypedArray to write interleaved data to
  */
 export function copyChannelsToInterleaved(channels, targetInterleaved) {
-	if (targetInterleaved.length < channels[0].length * channels.length) throw Error('incorrect channel lengths');
+	if (targetInterleaved.length < channels[0].length * channels.length)
+		throw Error("incorrect channel lengths");
 
 	let interleavedPos = 0;
 
-	for (let i = 0; i < channels[0].length; i++) {	
+	for (let i = 0; i < channels[0].length; i++) {
 		for (let j = 0; j < channels.length; j++) {
 			targetInterleaved[interleavedPos++] = channels[j][i];
 		}
@@ -75,7 +83,7 @@ export function copyChannelsToInterleaved(channels, targetInterleaved) {
 }
 
 /**
- * converts and *scales* TypedArray to Float32 where samples are scaled from 
+ * converts and *scales* TypedArray to Float32 where samples are scaled from
  * TypedArray.minValue < n < TypedArray.maxValue to -1 < n < 1
  *
  * @param  {TypedArray} data A TypedArray containing audio samples
@@ -85,7 +93,7 @@ export function toFloat32(data) {
 	let divisor = maxValueForTypedArray(data);
 	let float32 = new Float32Array(data.length);
 
-	switch(data.constructor) {
+	switch (data.constructor) {
 		case Float32Array:
 			return data;
 		case Int8Array:
@@ -96,7 +104,8 @@ export function toFloat32(data) {
 		case Uint8Array:
 		case Uint16Array:
 		case Uint32Array:
-			for (let i = 0; i < data.length; i++) float32[i] = (data[i] - divisor) / divisor;
+			for (let i = 0; i < data.length; i++)
+				float32[i] = (data[i] - divisor) / divisor;
 	}
 
 	return float32;

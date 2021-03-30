@@ -1,13 +1,24 @@
-import AbstractProcessor from '../abstract-processor';
+import AbstractProcessor from "../abstract-processor";
 
-export default function createWorkerResampler(nChannels, inputSampleRate, outputSampleRate, converterType) {
-	return new Promise((resolve, reject) => {
-		resolve(new WorkerResampler(nChannels, inputSampleRate, outputSampleRate, converterType));
+export default function createWorkerResampler(
+	nChannels,
+	inputSampleRate,
+	outputSampleRate,
+	converterType
+) {
+	return new Promise((resolve) => {
+		resolve(
+			new WorkerResampler(
+				nChannels,
+				inputSampleRate,
+				outputSampleRate,
+				converterType
+			)
+		);
 	});
 }
 
 class WorkerResampler extends AbstractProcessor {
-
 	constructor(nChannels, inputSampleRate, outputSampleRate, converterType) {
 		super(inputSampleRate, outputSampleRate);
 

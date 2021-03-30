@@ -1,10 +1,9 @@
-import { AbstractBackend, BackendState } from './abstract-backend';
-import RingBuffer from './ring-buffer';
-import { writeSilence } from './util';
+import { AbstractBackend, BackendState } from "./abstract-backend";
+import RingBuffer from "./ring-buffer";
+import { writeSilence } from "./util";
 
 /** Class that manages a ScriptProcessor to playback PCM audio */
 export default class ScriptProcessorBackend extends AbstractBackend {
-
 	/**
 	 *
 	 * @param { AudioContext } context         The parent AudioContext
@@ -18,7 +17,7 @@ export default class ScriptProcessorBackend extends AbstractBackend {
 	 */
 	constructor(context, nChannels, batchSize, bufferLength, bufferThreshold) {
 		super();
-		
+
 		this.batchSize = batchSize;
 		this.nChannels = nChannels;
 		this.bufferThreshold = bufferThreshold;
@@ -30,7 +29,9 @@ export default class ScriptProcessorBackend extends AbstractBackend {
 	}
 
 	/** getter */
-	get bufferLength() { return this._buffer.bufferLength; }
+	get bufferLength() {
+		return this._buffer.bufferLength;
+	}
 
 	/**
 	 * Appends data to the ends of the ArrayBuffer. If float32Array.length > the current buffer size,
@@ -44,7 +45,7 @@ export default class ScriptProcessorBackend extends AbstractBackend {
 
 	/**
 	 * Connects the ScriptProcessorNode to the given destination AudioNode
-	 * 
+	 *
 	 * @param {AudioNode} destination The node to which FeederNode will connect
 	 */
 	connect(destination) {
@@ -70,11 +71,13 @@ export default class ScriptProcessorBackend extends AbstractBackend {
 			case BackendState.UNINITIALIZED:
 				return;
 			case BackendState.PLAYING:
-				if (this._buffer.getNReadableSamples() === 0) this.state = BackendState.STARVED;
+				if (this._buffer.getNReadableSamples() === 0)
+					this.state = BackendState.STARVED;
 				break;
 			case BackendState.READY:
 			case BackendState.STARVED:
-				if (this._buffer.getNReadableSamples() >= this.bufferThreshold) this.state = BackendState.PLAYING;
+				if (this._buffer.getNReadableSamples() >= this.bufferThreshold)
+					this.state = BackendState.PLAYING;
 				break;
 			default:
 		}
@@ -90,7 +93,9 @@ export default class ScriptProcessorBackend extends AbstractBackend {
 	_playNext(audioProcessingEvent) {
 		this._updateState();
 
-		let outs = Array.apply(null, Array(this.nChannels)).map((x, i) => { return audioProcessingEvent.outputBuffer.getChannelData(i) });
+		let outs = Array.apply(null, Array(this.nChannels)).map((x, i) => {
+			return audioProcessingEvent.outputBuffer.getChannelData(i);
+		});
 
 		if (this.state === BackendState.PLAYING) {
 			this._buffer.read(this.batchSize, outs);

@@ -3,15 +3,15 @@ export const ConverterType = {
 	SRC_SINC_MEDIUM_QUALITY: 1,
 	SRC_SINC_FASTEST: 2,
 	SRC_ZERO_ORDER_HOLD: 3,
-	SRC_LINEAR: 4
-}
+	SRC_LINEAR: 4,
+};
 
-// method signature and type checking 
-export function create(converterType, nChannels, inputSampleRate, outputSampleRate) {
-	return new Promise((resolve, reject) => {
+// method signature and type checking
+export function create(converterType) {
+	return new Promise((resolve) => {
 		// makes it easy to check throwing behavior. copied from original libsamplerate-js library
 		if (converterType === undefined) {
-			throw 'invalid converterType submitted';
+			throw "invalid converterType submitted";
 		}
 
 		// calling console.log tells the unit test that the module was "successfully created"
@@ -25,8 +25,8 @@ export function create(converterType, nChannels, inputSampleRate, outputSampleRa
 				return array;
 			},
 			destroy: () => {
-				console.log('destroy');
-			}
+				console.log("destroy");
+			},
 		});
 	});
 }

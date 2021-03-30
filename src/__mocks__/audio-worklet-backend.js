@@ -1,13 +1,36 @@
-import { AbstractBackend } from '../abstract-backend.js';
+import { AbstractBackend } from "../abstract-backend.js";
 
-export default function createAudioWorklet(context, nChannels, batchSize, bufferLength, bufferThreshold, pathToWorklet) {
-	return new Promise((resolve, reject) => {
-		resolve(new AudioWorkletBackend(context, nChannels, batchSize, bufferLength, bufferThreshold, pathToWorklet));
+export default function createAudioWorklet(
+	context,
+	nChannels,
+	batchSize,
+	bufferLength,
+	bufferThreshold,
+	pathToWorklet
+) {
+	return new Promise((resolve) => {
+		resolve(
+			new AudioWorkletBackend(
+				context,
+				nChannels,
+				batchSize,
+				bufferLength,
+				bufferThreshold,
+				pathToWorklet
+			)
+		);
 	});
 }
 
 class AudioWorkletBackend extends AbstractBackend {
-	constructor(context, nChannels, batchSize, bufferLength, bufferThreshold, pathToWorklet) {
+	constructor(
+		context,
+		nChannels,
+		batchSize,
+		bufferLength,
+		bufferThreshold,
+		pathToWorklet
+	) {
 		super();
 
 		this.context = context;

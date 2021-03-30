@@ -1,20 +1,22 @@
-import { BackendState } from './abstract-backend';
-import { toFloat32 } from './util';
+import { BackendState } from "./abstract-backend";
+import { toFloat32 } from "./util";
 
 export default class FeederNode {
-
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param { AbstractProcessor } resampler Resamples data before handing to the backend for propagation
 	 * @param { AbstractBackend }   backend   Propagates audio data to the next AudioNode in the graph
 	 */
 	constructor(resampler, backend) {
 		// init MessageChannel if using both async resampler and backend
-		if (resampler.constructor.name === 'WorkerResampler' && backend.constructor.name === 'AudioWorkletBackend') {
+		if (
+			resampler.constructor.name === "WorkerResampler" &&
+			backend.constructor.name === "AudioWorkletBackend"
+		) {
 			let channel = new MessageChannel();
 			resampler.setPort(channel.port1);
-			backend  .setPort(channel.port2);
+			backend.setPort(channel.port2);
 		}
 
 		// set callbacks
@@ -26,21 +28,43 @@ export default class FeederNode {
 	}
 
 	/** getters */
-	get bufferLength() { return this._backend.bufferLength; }
-	get nChannels() { return this._backend.nChannels; }
-	get batchSize() { return this._backend.batchSize; }
+	get bufferLength() {
+		return this._backend.bufferLength;
+	}
+	get nChannels() {
+		return this._backend.nChannels;
+	}
+	get batchSize() {
+		return this._backend.batchSize;
+	}
 
 	/** AudioNode-compliant getters. All defer to underlying AudioNode */
-	get numberOfInputs()        { return this._backend.audioNode.numberOfInputs; }
-	get numberOfOutputs()       { return this._backend.audioNode.numberOfOutputs; }
-	get channelCount()          { return this._backend.audioNode.channelCount; }
-	get channelCountMode()      { return this._backend.audioNode.channelCountMode; }
-	get channelInterpretation() { return this._backend.audioNode.channelInterpretation; }
+	get numberOfInputs() {
+		return this._backend.audioNode.numberOfInputs;
+	}
+	get numberOfOutputs() {
+		return this._backend.audioNode.numberOfOutputs;
+	}
+	get channelCount() {
+		return this._backend.audioNode.channelCount;
+	}
+	get channelCountMode() {
+		return this._backend.audioNode.channelCountMode;
+	}
+	get channelInterpretation() {
+		return this._backend.audioNode.channelInterpretation;
+	}
 
 	/** AudioNode-compliant setters. All defer to underlying AudioNode */
-	set channelCount(channelCount)                   { this._backend.audioNode.channelCount = channelCount; }
-	set channelCountMode(channelCountMode)           { this._backend.audioNode.channelCountMode = channelCountMode; }
-	set channelInterpretation(channelInterpretation) { this._backend.audioNode.channelInterpretation = channelInterpretation }
+	set channelCount(channelCount) {
+		this._backend.audioNode.channelCount = channelCount;
+	}
+	set channelCountMode(channelCountMode) {
+		this._backend.audioNode.channelCountMode = channelCountMode;
+	}
+	set channelInterpretation(channelInterpretation) {
+		this._backend.audioNode.channelInterpretation = channelInterpretation;
+	}
 
 	/**
 	 * Connects FeederNode to the specific destination AudioNode
@@ -68,7 +92,9 @@ export default class FeederNode {
 		if (ArrayBuffer.isView(data)) {
 			parsedData = toFloat32(data);
 		} else {
-			throw Error(`FeederNode.feed() must receive an instance of TypedArray. You passed ${data.constructor.name}`);
+			throw Error(
+				`FeederNode.feed() must receive an instance of TypedArray. You passed ${data.constructor.name}`
+			);
 		}
 
 		this._resampler.processBatch(parsedData);
