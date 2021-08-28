@@ -1,14 +1,13 @@
 class RingBuffer {
-
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param { Number } bufferLength Array length (per channel). Extended if a large chunk is submitted to eed()
 	 * @param { Number } nChannels    The number of channels. 0 < nChannel < "infinity"
 	 */
-	constructor(bufferLength=32768, nChannels=2) {
-		if (bufferLength <= 0) throw 'bufferLength must be >= 1';
-		if (nChannels < 1) throw 'nChannels must >= 1';
+	constructor(bufferLength = 32768, nChannels = 2) {
+		if (bufferLength <= 0) throw "bufferLength must be >= 1";
+		if (nChannels < 1) throw "nChannels must >= 1";
 
 		this._data = new Float32Array(bufferLength * nChannels);
 
@@ -48,10 +47,13 @@ class RingBuffer {
 	 * @param  {Number} nSamples The number of samples (per channel) to read
 	 * @return {Array}           An mxn array of m Float32Arrays with length n
 	 */
-	read(nSamples, channels=null) {
-		let _channels = channels === null 
-			? Array.apply(null, Array(this._nChannels)).map((x, i) => {return new Float32Array(nSamples)}) 
-			: channels;
+	read(nSamples, channels = null) {
+		let _channels =
+			channels === null
+				? Array.apply(null, Array(this._nChannels)).map(() => {
+						return new Float32Array(nSamples);
+				  })
+				: channels;
 
 		let readableSamples = Math.min(nSamples, this.getNReadableSamples());
 		let readPos = this._readPos;
@@ -72,20 +74,21 @@ class RingBuffer {
 	/**
 	 * Resize the _data to accomodate for large chunks. Resizing will only happen if the number of
 	 * samples fed is > this.bufferLength.
-	 * 
+	 *
 	 * @param { Number } nInterleavedSamples The size of the chunk
 	 */
 	_resize(nInterleavedSamples) {
-		let nReadableInterleavedSamples = this.getNReadableSamples() * this._nChannels;
+		let nReadableInterleavedSamples =
+			this.getNReadableSamples() * this._nChannels;
 		let newLength = nInterleavedSamples + nReadableInterleavedSamples;
 
 		let newArray = new Float32Array(newLength);
-		
+
 		let readPos = this._readPos;
 		for (let i = 0; i < nReadableInterleavedSamples; i++) {
 			newArray[i] = this._data[readPos++];
 		}
-	
+
 		this._writePos = nReadableInterleavedSamples;
 		this._readPos = 0;
 		this._data = newArray;
@@ -98,7 +101,8 @@ class RingBuffer {
 	 * @return { Array }        Array containing [didResize, bufferLength]
 	 */
 	write(float32Data) {
-		if (!ArrayBuffer.isView(float32Data)) throw `Must submit a TypedArray. Received ${float32Data.constructor.name}`;
+		if (!ArrayBuffer.isView(float32Data))
+			throw `Must submit a TypedArray. Received ${float32Data.constructor.name}`;
 		let didResize = false;
 
 		// if submitted array is longer than internal buffer, resize interal array.

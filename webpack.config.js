@@ -36,6 +36,7 @@ let commonConfig = {
 		],
 	},
 	mode: 'production',
+	target: 'node',
 	plugins: [
 		new AfterBuildPlugin(replaceSelfWithThis)
 	]
