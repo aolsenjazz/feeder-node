@@ -70,7 +70,7 @@
     "@babel/preset-react": "^7.12.10",
     "@fiverr/afterbuild-webpack-plugin": "^1.0.0",
     "babel-eslint": "^10.1.0",
-    "babel-jest": "^26.6.3",
+    "babel-jest": "^27.1.0",
     "babel-loader": "^8.2.2",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "babel-polyfill": "^6.26.0",
