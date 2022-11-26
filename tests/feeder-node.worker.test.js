@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 // feeder-node.worker.js is currently mocked, so load the actual file using this alias
 const WORKER_ALIAS = 'FEEDER_NODE_WORKER';
 
