@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 import 'web-audio-test-api';
 import 'babel-polyfill';
 
