@@ -45,7 +45,7 @@ In practice, one should use an AudioBufferSourceNode for this; this is just an e
 		play.onclick = async () => {
 			// Initialize audio context and feederNode
 			var AudioCtx = window.AudioContext || window.webkitAudioContext;
-			context = new AudioCtx({sampleRate: 48000});
+			context = new AudioCtx({sampleRate: sampleRate});
 
 			feederNode = await FeederNode.createFeederNode(context, nChannels, { 
 				inputSampleRate: sampleRate,
@@ -64,7 +64,7 @@ In practice, one should use an AudioBufferSourceNode for this; this is just an e
 		// every second, feed 1 second (or remaining amount) of audio data
 		function startAudioInterval() {
 			var offset = 0;
-			var samplesPerSecond = 45000; // send just over 1 second of audio to account for setTimeout variance
+			var samplesPerSecond = sampleRate + 1000; // send just over 1 second of audio to account for setTimeout variance
 			var id = setInterval(() => {
 				// find out how much data to push to feederNode
 				var chunkSize = samplesPerSecond * nChannels;
