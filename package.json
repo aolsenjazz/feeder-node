@@ -61,12 +61,12 @@
   },
   "dependencies": {
     "@alexanderolsen/libsamplerate-js": "^2.1.1",
-    "@babel/runtime": "^7.12.5"
+    "@babel/runtime": "^8.0.5"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.10",
+    "@babel/core": "^8.0.5",
     "@babel/plugin-transform-runtime": "^7.12.10",
-    "@babel/preset-env": "^7.12.11",
+    "@babel/preset-env": "^8.0.5",
     "@babel/preset-react": "^7.12.10",
     "@fiverr/afterbuild-webpack-plugin": "^1.0.0",
     "babel-eslint": "^10.1.0",
